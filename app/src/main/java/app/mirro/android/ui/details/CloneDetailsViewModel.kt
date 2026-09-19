@@ -103,8 +103,8 @@ class CloneDetailsViewModel(
 
     fun requestLaunch(onResult: (String) -> Unit) {
         val instance = _uiState.value.instance ?: return
-        if (instance.engineType == CloneEngineType.WORK_PROFILE) {
-            // Real Work Profile launch executes directly
+        if (instance.engineType == CloneEngineType.WORK_PROFILE || instance.engineType == CloneEngineType.VIRTUALIZED_CONTAINER) {
+            // Real Work Profile and Container launches execute directly
             proceedLaunch(onResult)
         } else {
             // Blueprint staging shows demonstration notice

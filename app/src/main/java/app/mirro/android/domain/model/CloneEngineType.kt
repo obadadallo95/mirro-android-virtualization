@@ -19,7 +19,7 @@ enum class CloneEngineType(
     VIRTUALIZED_CONTAINER(
         titleRes = R.string.engine_title_container,
         descRes = R.string.engine_desc_container,
-        isImplemented = false
+        isImplemented = true
     ),
     SYSTEM_USER_PROFILE(
         titleRes = R.string.engine_title_user_profile,

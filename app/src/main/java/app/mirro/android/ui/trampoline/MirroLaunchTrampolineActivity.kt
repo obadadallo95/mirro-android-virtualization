@@ -78,6 +78,14 @@ class MirroLaunchTrampolineActivity : ComponentActivity() {
                         Toast.makeText(this@MirroLaunchTrampolineActivity, message, Toast.LENGTH_LONG).show()
                     }
                 }
+            } else if (instance.engineType == CloneEngineType.VIRTUALIZED_CONTAINER) {
+                val containerEngine = app.mirro.android.domain.engine.container.ContainerCloneEngine(
+                    context = applicationContext,
+                    cloneRepository = repo
+                )
+                withContext(Dispatchers.IO) {
+                    containerEngine.launchInstance(instance)
+                }
             } else {
                 withContext(Dispatchers.IO) {
                     engine.launchInstance(instance)

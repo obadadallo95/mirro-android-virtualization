@@ -84,11 +84,17 @@ fun MirroApp() {
             cloneRepository = cloneRepo
         )
     }
-    val containerEngine = remember { ContainerCloneEngine() }
+    val containerEngine = remember {
+        ContainerCloneEngine(
+            context = context,
+            cloneRepository = cloneRepo,
+            shortcutRepository = shortcutRepo
+        )
+    }
 
     val engineRegistry = remember {
         EngineRegistry(
-            listOf(blueprintEngine, workProfileEngine, containerEngine)
+            listOf(containerEngine, workProfileEngine, blueprintEngine)
         )
     }
 

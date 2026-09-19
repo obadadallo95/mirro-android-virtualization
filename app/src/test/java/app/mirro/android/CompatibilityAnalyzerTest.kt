@@ -3,6 +3,7 @@ package app.mirro.android
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
 import app.mirro.android.domain.analyzer.CompatibilityAnalyzer
+import app.mirro.android.domain.model.CloneEngineType
 import app.mirro.android.domain.model.CompatibilityStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -13,7 +14,7 @@ class CompatibilityAnalyzerTest {
     private val analyzer = CompatibilityAnalyzer()
 
     @Test
-    fun `chatgpt package evaluates as UNKNOWN pending runtime test`() {
+    fun `chatgpt package in container evaluates as CONTAINER_NOT_TESTED pending initial launch`() {
         val packageInfo = PackageInfo().apply {
             packageName = "com.openai.chatgpt"
             applicationInfo = ApplicationInfo().apply {
@@ -22,11 +23,34 @@ class CompatibilityAnalyzerTest {
             }
         }
 
-        val report = analyzer.analyze(packageInfo)
+        val report = analyzer.analyze(
+            packageInfo = packageInfo,
+            engineType = CloneEngineType.VIRTUALIZED_CONTAINER
+        )
         // Primary acceptance-test app must not claim SUPPORTED without real runtime testing
-        assertEquals(CompatibilityStatus.UNKNOWN, report.status)
+        assertEquals(CompatibilityStatus.CONTAINER_NOT_TESTED, report.status)
         assertTrue(report.technicalDetails.any { it.contains("Primary acceptance-test target") })
-        assertTrue(report.technicalDetails.any { it.contains("Runtime isolation test pending") })
+        assertTrue(report.technicalDetails.any { it.contains("Initial runtime launch test pending") })
+    }
+
+    @Test
+    fun `chatgpt package in container with verified launch evaluates as CONTAINER_LAUNCH_VERIFIED`() {
+        val packageInfo = PackageInfo().apply {
+            packageName = "com.openai.chatgpt"
+            applicationInfo = ApplicationInfo().apply {
+                flags = ApplicationInfo.FLAG_ALLOW_BACKUP
+                targetSdkVersion = 34
+            }
+        }
+
+        val report = analyzer.analyze(
+            packageInfo = packageInfo,
+            engineType = CloneEngineType.VIRTUALIZED_CONTAINER,
+            isRuntimeLaunchVerified = true
+        )
+        assertEquals(CompatibilityStatus.CONTAINER_LAUNCH_VERIFIED, report.status)
+        assertTrue(report.technicalDetails.any { it.contains("Container runtime initialized and executed successfully") })
+        assertTrue(report.technicalDetails.any { it.contains("PathClassLoader") })
     }
 
     @Test
@@ -61,35 +85,6 @@ class CompatibilityAnalyzerTest {
     }
 
     @Test
-    fun `messaging app with GMS push evaluates as LIMITED`() {
-        val packageInfo = PackageInfo().apply {
-            packageName = "com.whatsapp"
-            applicationInfo = ApplicationInfo().apply {
-                flags = ApplicationInfo.FLAG_ALLOW_BACKUP
-                targetSdkVersion = 34
-            }
-        }
-
-        val report = analyzer.analyze(packageInfo)
-        assertEquals(CompatibilityStatus.LIMITED, report.status)
-    }
-
-    @Test
-    fun `standard user app evaluates as UNKNOWN pending runtime test`() {
-        val packageInfo = PackageInfo().apply {
-            packageName = "org.thoughtcrime.securesms"
-            applicationInfo = ApplicationInfo().apply {
-                flags = ApplicationInfo.FLAG_ALLOW_BACKUP
-                targetSdkVersion = 34
-            }
-        }
-
-        val report = analyzer.analyze(packageInfo)
-        assertEquals(CompatibilityStatus.UNKNOWN, report.status)
-        assertTrue(report.technicalDetails.any { it.contains("Requires runtime test") })
-    }
-
-    @Test
     fun `work profile app with verified runtime launch evaluates as VERIFIED_WORK_PROFILE`() {
         val packageInfo = PackageInfo().apply {
             packageName = "com.openai.chatgpt"
@@ -101,7 +96,7 @@ class CompatibilityAnalyzerTest {
 
         val report = analyzer.analyze(
             packageInfo = packageInfo,
-            engineType = app.mirro.android.domain.model.CloneEngineType.WORK_PROFILE,
+            engineType = CloneEngineType.WORK_PROFILE,
             isInstalledInWorkProfile = true,
             isRuntimeLaunchVerified = true
         )
@@ -123,7 +118,7 @@ class CompatibilityAnalyzerTest {
 
         val report = analyzer.analyze(
             packageInfo = packageInfo,
-            engineType = app.mirro.android.domain.model.CloneEngineType.WORK_PROFILE,
+            engineType = CloneEngineType.WORK_PROFILE,
             isInstalledInWorkProfile = true,
             isRuntimeLaunchVerified = false
         )

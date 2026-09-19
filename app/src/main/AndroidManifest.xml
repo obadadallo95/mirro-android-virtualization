@@ -36,6 +36,14 @@
             </intent-filter>
         </activity>
 
+        <!-- Container Virtual Runtime Host Activity -->
+        <activity
+            android:name=".ui.container.ContainerHostActivity"
+            android:exported="false"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout"
+            android:theme="@style/Theme.MyApplication"
+            android:windowSoftInputMode="adjustResize" />
+
         <!-- Trampoline for pinned clone desktop shortcuts -->
         <activity
             android:name=".ui.trampoline.MirroLaunchTrampolineActivity"

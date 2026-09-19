@@ -106,14 +106,25 @@ app.mirro.android
   - Requires Profile Owner provisioning.
   - Device manufacturer limit of 1 active work profile on standard consumer ROMs.
 
-### 2. Strategy B: Virtualized Container (`ContainerCloneEngine`)
-- **Mechanism**: User-space virtual container that loads host APK DEX code via custom `DexClassLoader`, intercepts system service IPCs using dynamic `Binder` proxies for `ActivityManager` and `PackageManager`, and redirects path access to Mirro's private app directory (`/data/user/0/app.mirro.android/clones/<id>/`).
+### 2. Strategy B: Mirro Virtualized Container (`ContainerCloneEngine` - Default)
+- **Mechanism**: Modern in-app user-space sandbox architecture:
+  - **APK & DEX Inspection (`ApkInspector`)**: Discovers split APKs, native ABIs, entry application classes, and activities.
+  - **Isolated Storage Partitioning (`VirtualFileSystem`)**: Automatically creates independent sandboxes under `files/mirro_sandboxes/<clone_id>/` for data, databases, shared_prefs, cache, and code_cache.
+  - **Context Redirection (`VirtualContext`)**: Wraps and redirects application storage calls (`filesDir`, `cacheDir`, `getDatabasePath`, `getSharedPreferences`) into the clone's dedicated filesystem directory.
+  - **Multi-Process WebView Isolation**: Dynamically assigns distinct directory suffixes via `WebView.setDataDirectorySuffix("mirro_c_<clone_id>")` (Android 28+) so cloned WebView sessions, cookies, and local storage cannot clash with the host.
+  - **Container Host (`ContainerHostActivity`)**: Dedicated container activity that boots the runtime, initializes the sandboxed context, and launches the target application.
+  - **Process Management (`VirtualProcessController`)**: Controls lifecycle and freeze/unfreeze states.
 - **Benefits**:
-  - Unlimited concurrent clone instances.
-  - Does not require device administrator privileges.
-- **Constraints**:
-  - Strict Android 14+ private data directory hardening (`Context.createPackageContext` restrictions).
-  - Dynamic code loading security validations.
+  - 100% free, private, on-device, and ad-free.
+  - No Work Profile or Device Admin required.
+  - No system user switching or enterprise management setup.
+  - Unlimited concurrent clone instances with custom names and badges.
+- **Constraints & Honesty**:
+  - Operates within standard Android app permissions.
+  - Does not claim kernel-level root bypass, hardware keystore spoofing, or SafetyNet/Play Integrity bypass.
+
+### 3. Strategy C: Android Work Profile (`WorkProfileCloneEngine` - Fallback)
+- **Mechanism**: Utilizes Android Enterprise APIs (`DevicePolicyManager`, `LauncherApps`) as an optional secondary fallback engine for apps requiring hardware attestation.
 
 ### 3. Architecture Blueprint Staging (`BlueprintCloneEngine`)
 - Foundation engine active in Milestone 1.

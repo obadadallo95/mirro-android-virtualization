@@ -26,7 +26,7 @@ data class CloneSetupUiState(
     val customName: String = "",
     val badgeColorHex: String = "#10B981", // Default Emerald
     val badgeSymbol: String = "2",
-    val selectedEngine: CloneEngineType = CloneEngineType.WORK_PROFILE,
+    val selectedEngine: CloneEngineType = CloneEngineType.VIRTUALIZED_CONTAINER,
     val isLocked: Boolean = false,
     val compatibilityReport: CompatibilityReport? = null,
     val managedProfileStatus: ManagedProfileAppStatus? = null,
@@ -86,6 +86,10 @@ class CloneSetupViewModel(
                         CompatibilityStatus.SUPPORTED -> "Application structure is suitable for profile and container sandboxing."
                         CompatibilityStatus.LIMITED -> "Application uses services that may experience partial push or keystore isolation constraints."
                         CompatibilityStatus.PROTECTED -> "Application contains system or shared UID protection policies."
+                        CompatibilityStatus.CONTAINER_NOT_TESTED -> "Target package prepared for container runtime isolation."
+                        CompatibilityStatus.CONTAINER_RUNTIME_READY -> "Container sandbox configured and ready for startup."
+                        CompatibilityStatus.CONTAINER_LAUNCH_VERIFIED -> "Container runtime execution verified with isolated data."
+                        CompatibilityStatus.CONTAINER_LAUNCH_FAILED -> "Container startup encountered a platform or library stoppage."
                         CompatibilityStatus.WORK_PROFILE_AVAILABLE -> "Package is present inside Mirro Space and ready for isolation."
                         CompatibilityStatus.WORK_PROFILE_INSTALL_REQUIRED -> "Application must be added to Mirro Space to establish clone."
                         CompatibilityStatus.VERIFIED_WORK_PROFILE -> "Verified runtime multi-account isolation in Mirro Space."
