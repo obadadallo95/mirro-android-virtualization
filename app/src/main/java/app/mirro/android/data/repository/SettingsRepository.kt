@@ -22,7 +22,8 @@ data class UserSettings(
     val dynamicColor: Boolean = true,
     val languageCode: String = "system",
     val biometricLockEnabled: Boolean = false,
-    val viewMode: ViewMode = ViewMode.GRID
+    val viewMode: ViewMode = ViewMode.GRID,
+    val developerModeEnabled: Boolean = false
 )
 
 class SettingsRepository(
@@ -41,13 +42,15 @@ class SettingsRepository(
         val biometricLock = prefs.getBoolean("biometric_lock", false)
         val viewModeStr = prefs.getString("view_mode", ViewMode.GRID.name) ?: ViewMode.GRID.name
         val viewMode = try { ViewMode.valueOf(viewModeStr) } catch (_: Exception) { ViewMode.GRID }
+        val developerMode = prefs.getBoolean("developer_mode", false)
 
         return UserSettings(
             themeMode = theme,
             dynamicColor = dynamicColor,
             languageCode = languageCode,
             biometricLockEnabled = biometricLock,
-            viewMode = viewMode
+            viewMode = viewMode,
+            developerModeEnabled = developerMode
         )
     }
 
@@ -74,5 +77,10 @@ class SettingsRepository(
     fun setViewMode(viewMode: ViewMode) {
         prefs.edit().putString("view_mode", viewMode.name).apply()
         _settings.value = _settings.value.copy(viewMode = viewMode)
+    }
+
+    fun setDeveloperMode(enabled: Boolean) {
+        prefs.edit().putBoolean("developer_mode", enabled).apply()
+        _settings.value = _settings.value.copy(developerModeEnabled = enabled)
     }
 }

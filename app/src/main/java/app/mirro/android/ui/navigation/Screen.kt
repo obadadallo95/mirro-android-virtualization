@@ -6,6 +6,7 @@ sealed class Screen {
     data class CloneSetup(val packageName: String) : Screen()
     data class CloneDetails(val instanceId: String) : Screen()
     data object Settings : Screen()
-    data object ArchitectureDocs : Screen()
+    data class ContainerDiagnostics(val cloneId: String? = null) : Screen()
     data object BrandIdentity : Screen()
 }
+

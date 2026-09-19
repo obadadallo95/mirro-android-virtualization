@@ -27,4 +27,8 @@ class SettingsViewModel(
     fun setBiometricLock(enabled: Boolean) {
         settingsRepository.setBiometricLock(enabled)
     }
+
+    fun setDeveloperMode(enabled: Boolean) {
+        settingsRepository.setDeveloperMode(enabled)
+    }
 }

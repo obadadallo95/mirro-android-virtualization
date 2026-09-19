@@ -4,7 +4,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import app.mirro.android.domain.model.CloneEngineType
 import app.mirro.android.domain.model.CloneInstance
-import app.mirro.android.domain.model.ProfileType
 
 @Entity(tableName = "clone_instances")
 data class CloneInstanceEntity(
@@ -14,9 +13,7 @@ data class CloneInstanceEntity(
     val customName: String,
     val badgeColorHex: String,
     val badgeSymbol: String,
-    val engineType: String,
-    val profileType: String = ProfileType.MIRRO_MANAGED.name,
-    val userSerialNumber: Long = 0L,
+    val engineType: String = CloneEngineType.VIRTUALIZED_CONTAINER.name,
     val isFrozen: Boolean,
     val isLocked: Boolean,
     val storageSizeBytes: Long,
@@ -28,12 +25,7 @@ data class CloneInstanceEntity(
         val engine = try {
             CloneEngineType.valueOf(engineType)
         } catch (_: Exception) {
-            CloneEngineType.BLUEPRINT_STAGING
-        }
-        val profile = try {
-            ProfileType.valueOf(profileType)
-        } catch (_: Exception) {
-            ProfileType.MIRRO_MANAGED
+            CloneEngineType.VIRTUALIZED_CONTAINER
         }
         return CloneInstance(
             id = id,
@@ -43,8 +35,6 @@ data class CloneInstanceEntity(
             badgeColorHex = badgeColorHex,
             badgeSymbol = badgeSymbol,
             engineType = engine,
-            profileType = profile,
-            userSerialNumber = userSerialNumber,
             isFrozen = isFrozen,
             isLocked = isLocked,
             storageSizeBytes = storageSizeBytes,
@@ -64,8 +54,6 @@ data class CloneInstanceEntity(
                 badgeColorHex = instance.badgeColorHex,
                 badgeSymbol = instance.badgeSymbol,
                 engineType = instance.engineType.name,
-                profileType = instance.profileType.name,
-                userSerialNumber = instance.userSerialNumber,
                 isFrozen = instance.isFrozen,
                 isLocked = instance.isLocked,
                 storageSizeBytes = instance.storageSizeBytes,
@@ -76,3 +64,4 @@ data class CloneInstanceEntity(
         }
     }
 }
+

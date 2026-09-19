@@ -3,15 +3,17 @@ package app.mirro.android.domain.engine
 import app.mirro.android.domain.model.CloneEngineType
 
 /**
- * Registry holding available isolation engines.
+ * Registry holding available cloning engines for Mirro.
  */
 class EngineRegistry(
-    private val engines: List<CloneEngine>
+    private val defaultEngine: CloneEngine
 ) {
-    fun getEngine(type: CloneEngineType): CloneEngine {
-        return engines.firstOrNull { it.engineType == type }
-            ?: engines.first { it.engineType == CloneEngineType.BLUEPRINT_STAGING }
+    fun getEngine(type: CloneEngineType = CloneEngineType.VIRTUALIZED_CONTAINER): CloneEngine {
+        return defaultEngine
     }
 
-    fun getAllEngines(): List<CloneEngine> = engines
+    fun getDefaultEngine(): CloneEngine = defaultEngine
+
+    fun getAllEngines(): List<CloneEngine> = listOf(defaultEngine)
 }
+

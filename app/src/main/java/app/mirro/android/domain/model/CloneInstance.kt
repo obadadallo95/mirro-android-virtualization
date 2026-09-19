@@ -1,7 +1,7 @@
 package app.mirro.android.domain.model
 
 /**
- * Represents an isolated or configured cloned instance of an Android application.
+ * Represents an isolated or configured cloned instance of an Android application in Mirro.
  */
 data class CloneInstance(
     val id: String,
@@ -10,9 +10,7 @@ data class CloneInstance(
     val customName: String,
     val badgeColorHex: String,
     val badgeSymbol: String,
-    val engineType: CloneEngineType,
-    val profileType: ProfileType = ProfileType.MIRRO_MANAGED,
-    val userSerialNumber: Long = 0L,
+    val engineType: CloneEngineType = CloneEngineType.VIRTUALIZED_CONTAINER,
     val isFrozen: Boolean = false,
     val isLocked: Boolean = false,
     val storageSizeBytes: Long = 0L,
@@ -30,8 +28,7 @@ data class CloneConfig(
     val customName: String,
     val badgeColorHex: String,
     val badgeSymbol: String,
-    val engineType: CloneEngineType,
-    val profileType: ProfileType = ProfileType.MIRRO_MANAGED,
-    val userSerialNumber: Long = 0L,
+    val engineType: CloneEngineType = CloneEngineType.VIRTUALIZED_CONTAINER,
     val isLocked: Boolean = false
 )
+

@@ -283,6 +283,7 @@
     <!-- Diagnostics & Engine Test Placeholder -->
     <string name="diagnostics_title">تشخيصات بيئة العزل</string>
     <string name="diagnostics_subtitle">التحقق من أساسيات عزل العمليات والوصول لمستودع المفاتيح</string>
+    <string name="diagnostics_developer_only_notice">وضع المطورين: قياسات العزل ومؤشرات الحاوية الداخلية مفعلة لأغراض الفحص والتشخيص.</string>
     <string name="diagnostics_test_isolation">فحص عزل العمليات</string>
     <string name="diagnostics_test_keystore">الوصول لمستودع المفاتيح العتادي</string>
     <string name="diagnostics_passed">ناجح</string>

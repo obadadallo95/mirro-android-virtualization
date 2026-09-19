@@ -32,12 +32,7 @@ import app.mirro.android.data.repository.StorageRepository
 import app.mirro.android.data.repository.ThemeMode
 import app.mirro.android.domain.analyzer.CompatibilityAnalyzer
 import app.mirro.android.domain.engine.EngineRegistry
-import app.mirro.android.domain.engine.blueprint.BlueprintCloneEngine
 import app.mirro.android.domain.engine.container.ContainerCloneEngine
-import app.mirro.android.domain.engine.workprofile.ProfileAppDiscoveryManager
-import app.mirro.android.domain.engine.workprofile.ProfileProvisioningManager
-import app.mirro.android.domain.engine.workprofile.WorkProfileCloneEngine
-import app.mirro.android.domain.model.CloneEngineType
 import app.mirro.android.ui.details.CloneDetailsScreen
 import app.mirro.android.ui.details.CloneDetailsViewModel
 import app.mirro.android.ui.home.HomeScreen
@@ -45,7 +40,8 @@ import app.mirro.android.ui.home.HomeViewModel
 import app.mirro.android.ui.navigation.Screen
 import app.mirro.android.ui.picker.AppPickerScreen
 import app.mirro.android.ui.picker.AppPickerViewModel
-import app.mirro.android.ui.settings.ArchitectureDocsScreen
+import app.mirro.android.ui.settings.BrandIdentityScreen
+import app.mirro.android.ui.settings.ContainerDiagnosticsScreen
 import app.mirro.android.ui.settings.SettingsScreen
 import app.mirro.android.ui.settings.SettingsViewModel
 import app.mirro.android.ui.setup.CloneSetupScreen
@@ -65,25 +61,6 @@ fun MirroApp() {
     val shortcutRepo = remember { ShortcutRepository(context) }
     val settingsRepo = remember { SettingsRepository(context) }
 
-    val provisioningManager = remember { ProfileProvisioningManager(context) }
-    val appDiscoveryManager = remember { ProfileAppDiscoveryManager(context, provisioningManager) }
-
-    val blueprintEngine = remember {
-        BlueprintCloneEngine(
-            context = context,
-            cloneInstanceRepository = cloneRepo,
-            storageRepository = storageRepo,
-            shortcutRepository = shortcutRepo
-        )
-    }
-    val workProfileEngine = remember {
-        WorkProfileCloneEngine(
-            context = context,
-            provisioningManager = provisioningManager,
-            appDiscoveryManager = appDiscoveryManager,
-            cloneRepository = cloneRepo
-        )
-    }
     val containerEngine = remember {
         ContainerCloneEngine(
             context = context,
@@ -93,9 +70,7 @@ fun MirroApp() {
     }
 
     val engineRegistry = remember {
-        EngineRegistry(
-            listOf(containerEngine, workProfileEngine, blueprintEngine)
-        )
+        EngineRegistry(defaultEngine = containerEngine)
     }
 
     // ViewModels with constructor-based state management
@@ -104,8 +79,7 @@ fun MirroApp() {
             context = context,
             cloneRepository = cloneRepo,
             settingsRepository = settingsRepo,
-            engineRegistry = engineRegistry,
-            provisioningManager = provisioningManager
+            cloneEngine = containerEngine
         )
     }
 
@@ -210,8 +184,7 @@ fun MirroApp() {
                                 CloneSetupViewModel(
                                     packageName = screen.packageName,
                                     installedAppRepository = installedAppRepo,
-                                    engineRegistry = engineRegistry,
-                                    workProfileEngine = workProfileEngine,
+                                    cloneEngine = containerEngine,
                                     analyzer = analyzer
                                 )
                             }
@@ -219,13 +192,9 @@ fun MirroApp() {
                                 viewModel = setupViewModel,
                                 onNavigateBack = { navigateBack() },
                                 onCloneCreated = { id ->
-                                    // Pop back to Home then navigate to clone details
                                     backStack.clear()
                                     backStack.add(Screen.Home)
                                     backStack.add(Screen.CloneDetails(id))
-                                },
-                                onViewArchitecture = {
-                                    navigateTo(Screen.ArchitectureDocs)
                                 }
                             )
                         }
@@ -237,9 +206,8 @@ fun MirroApp() {
                                     context = context,
                                     cloneRepository = cloneRepo,
                                     installedAppRepository = installedAppRepo,
-                                    engineRegistry = engineRegistry,
-                                    analyzer = analyzer,
-                                    discoveryManager = appDiscoveryManager
+                                    cloneEngine = containerEngine,
+                                    analyzer = analyzer
                                 )
                             }
                             CloneDetailsScreen(
@@ -252,19 +220,20 @@ fun MirroApp() {
                             SettingsScreen(
                                 viewModel = settingsViewModel,
                                 onNavigateBack = { navigateBack() },
-                                onNavigateToArchitectureDocs = { navigateTo(Screen.ArchitectureDocs) },
+                                onNavigateToDiagnostics = { navigateTo(Screen.ContainerDiagnostics()) },
                                 onNavigateToBrandIdentity = { navigateTo(Screen.BrandIdentity) }
                             )
                         }
 
-                        is Screen.ArchitectureDocs -> {
-                            ArchitectureDocsScreen(
+                        is Screen.ContainerDiagnostics -> {
+                            ContainerDiagnosticsScreen(
+                                cloneId = screen.cloneId,
                                 onNavigateBack = { navigateBack() }
                             )
                         }
 
                         is Screen.BrandIdentity -> {
-                            app.mirro.android.ui.settings.BrandIdentityScreen(
+                            BrandIdentityScreen(
                                 onNavigateBack = { navigateBack() }
                             )
                         }

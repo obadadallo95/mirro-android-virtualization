@@ -21,16 +21,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -38,7 +32,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -56,18 +49,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.mirro.android.R
-import app.mirro.android.domain.engine.workprofile.ManagedProfileAppStatus
-import app.mirro.android.domain.model.CloneEngineType
 import app.mirro.android.ui.components.AppIconWithBadge
 import app.mirro.android.ui.components.CompatibilityChip
-import app.mirro.android.ui.components.HonestEngineNoticeDialog
 import app.mirro.android.ui.theme.BadgeAmber
 import app.mirro.android.ui.theme.BadgeCrimson
 import app.mirro.android.ui.theme.BadgeEmerald
@@ -76,7 +65,6 @@ import app.mirro.android.ui.theme.BadgeSapphire
 import app.mirro.android.ui.theme.BadgeSky
 import app.mirro.android.ui.theme.BadgeTeal
 import app.mirro.android.ui.theme.BadgeViolet
-import app.mirro.android.ui.theme.StatusLimited
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,10 +72,8 @@ fun CloneSetupScreen(
     viewModel: CloneSetupViewModel,
     onNavigateBack: () -> Unit,
     onCloneCreated: (String) -> Unit,
-    onViewArchitecture: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -103,28 +89,6 @@ fun CloneSetupScreen(
             viewModel.clearMessages()
         }
     }
-
-    LaunchedEffect(uiState.infoMessage) {
-        uiState.infoMessage?.let { msg ->
-            snackbarHostState.showSnackbar(msg)
-            viewModel.clearMessages()
-        }
-    }
-
-    if (uiState.showHonestNotice) {
-        HonestEngineNoticeDialog(
-            selectedEngine = uiState.selectedEngine,
-            onSaveBlueprint = { viewModel.executeBlueprintCreation() },
-            onViewArchitecture = {
-                viewModel.dismissHonestNotice()
-                onViewArchitecture()
-            },
-            onDismiss = { viewModel.dismissHonestNotice() }
-        )
-    }
-
-    val isWpEngine = uiState.selectedEngine == CloneEngineType.WORK_PROFILE
-    val isAppInWp = uiState.managedProfileStatus is ManagedProfileAppStatus.AppAvailableInProfile
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -157,38 +121,22 @@ fun CloneSetupScreen(
                     .background(MaterialTheme.colorScheme.background)
                     .padding(horizontal = 20.dp, vertical = 16.dp)
             ) {
-                if (isWpEngine && !isAppInWp && uiState.app != null) {
-                    Button(
-                        onClick = { viewModel.onAddAppToWorkProfile(context) },
-                        enabled = !uiState.isLoading,
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                            .testTag("add_to_space_button")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp)
+                Button(
+                    onClick = { viewModel.onCreateClone() },
+                    enabled = !uiState.isLoading && !uiState.isCreating && uiState.app != null,
+                    shape = RoundedCornerShape(14.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .testTag("create_clone_button")
+                ) {
+                    if (uiState.isCreating) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(22.dp),
+                            strokeWidth = 2.dp
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = stringResource(R.string.space_app_action_add, uiState.app?.label ?: ""),
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                } else {
-                    Button(
-                        onClick = { viewModel.onCreateCloneClicked() },
-                        enabled = !uiState.isLoading && uiState.app != null,
-                        shape = RoundedCornerShape(14.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp)
-                            .testTag("create_clone_button")
-                    ) {
+                    } else {
                         Text(
                             text = stringResource(R.string.setup_button_create),
                             style = MaterialTheme.typography.titleSmall,
@@ -275,16 +223,6 @@ fun CloneSetupScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Work Profile Specific Presence Card
-                    if (isWpEngine) {
-                        WorkProfileStatusCard(
-                            status = uiState.managedProfileStatus,
-                            appLabel = app.label,
-                            onAddApp = { viewModel.onAddAppToWorkProfile(context) }
-                        )
-                        Spacer(modifier = Modifier.height(20.dp))
-                    }
-
                     // Clone Name Input
                     Text(
                         text = stringResource(R.string.setup_name_label),
@@ -369,7 +307,7 @@ fun CloneSetupScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    val symbolPresets = listOf("2", "W", "P", "Alt", "Dev", "★")
+                    val symbolPresets = listOf("2", "3", "Work", "Alt", "Dev", "★")
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier
@@ -400,25 +338,6 @@ fun CloneSetupScreen(
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
-
-                    // Engine Strategy Selector
-                    Text(
-                        text = stringResource(R.string.setup_engine_strategy),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    CloneEngineType.entries.forEach { engine ->
-                        EngineOptionCard(
-                            engine = engine,
-                            isSelected = uiState.selectedEngine == engine,
-                            onClick = { viewModel.onEngineChange(engine) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
-                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Biometric Lock Toggle
                     Card(
@@ -507,208 +426,6 @@ fun CloneSetupScreen(
                     Spacer(modifier = Modifier.height(24.dp))
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun WorkProfileStatusCard(
-    status: ManagedProfileAppStatus?,
-    appLabel: String,
-    onAddApp: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = when (status) {
-                is ManagedProfileAppStatus.AppAvailableInProfile -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                is ManagedProfileAppStatus.ProfileNotReady -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
-                else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-            }
-        ),
-        modifier = modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = when (status) {
-                        is ManagedProfileAppStatus.AppAvailableInProfile -> Icons.Default.CheckCircle
-                        is ManagedProfileAppStatus.ProfileNotReady -> Icons.Default.ErrorOutline
-                        else -> Icons.Default.Work
-                    },
-                    contentDescription = null,
-                    tint = when (status) {
-                        is ManagedProfileAppStatus.AppAvailableInProfile -> MaterialTheme.colorScheme.primary
-                        is ManagedProfileAppStatus.ProfileNotReady -> MaterialTheme.colorScheme.error
-                        else -> MaterialTheme.colorScheme.primary
-                    },
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = stringResource(R.string.space_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.weight(1f))
-                if (status is ManagedProfileAppStatus.AppAvailableInProfile) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.space_app_verified_badge),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            when (status) {
-                is ManagedProfileAppStatus.AppAvailableInProfile -> {
-                    Text(
-                        text = stringResource(R.string.space_app_status_available, appLabel),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = stringResource(R.string.space_app_ready_to_create),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-                is ManagedProfileAppStatus.ProfileNotReady -> {
-                    Text(
-                        text = status.reason,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onErrorContainer
-                    )
-                }
-                is ManagedProfileAppStatus.BlockedByPlatform -> {
-                    Text(
-                        text = status.reason,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-                is ManagedProfileAppStatus.InstallActionRequired,
-                is ManagedProfileAppStatus.AppNotInstalledInProfile,
-                null -> {
-                    Text(
-                        text = stringResource(R.string.space_app_install_guide, appLabel),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedButton(
-                        onClick = onAddApp,
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(stringResource(R.string.space_app_action_add, appLabel))
-                    }
-                }
-                is ManagedProfileAppStatus.AppUnavailable -> {
-                    Text(
-                        text = status.reason,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun EngineOptionCard(
-    engine: CloneEngineType,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-            else MaterialTheme.colorScheme.surface
-        ),
-        border = if (isSelected) androidx.compose.foundation.BorderStroke(
-            1.5.dp,
-            MaterialTheme.colorScheme.primary
-        ) else null,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = stringResource(engine.titleRes),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                if (engine.isImplemented) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.status_ready),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(StatusLimited.copy(alpha = 0.15f))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.status_under_construction),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = StatusLimited,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = stringResource(engine.descRes),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

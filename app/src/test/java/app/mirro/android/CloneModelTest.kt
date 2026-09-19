@@ -19,7 +19,7 @@ class CloneModelTest {
             customName = "ChatGPT Work",
             badgeColorHex = "#10B981",
             badgeSymbol = "W",
-            engineType = CloneEngineType.BLUEPRINT_STAGING,
+            engineType = CloneEngineType.VIRTUALIZED_CONTAINER,
             isFrozen = false,
             isLocked = true,
             storageSizeBytes = 1024 * 1024 * 15L,
@@ -31,7 +31,7 @@ class CloneModelTest {
         assertEquals("test-uuid-1", entity.id)
         assertEquals("com.openai.chatgpt", entity.originalPackageName)
         assertEquals("ChatGPT Work", entity.customName)
-        assertEquals("BLUEPRINT_STAGING", entity.engineType)
+        assertEquals("VIRTUALIZED_CONTAINER", entity.engineType)
 
         val restoredDomain = entity.toDomainModel()
         assertEquals(domain.id, restoredDomain.id)
@@ -55,3 +55,4 @@ class CloneModelTest {
         assertEquals("~12.0 MB", StorageMetrics.formatBytes(12L * 1024 * 1024, isEstimated = true))
     }
 }
+

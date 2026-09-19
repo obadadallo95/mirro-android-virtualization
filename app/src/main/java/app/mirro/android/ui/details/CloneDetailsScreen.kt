@@ -133,7 +133,7 @@ fun CloneDetailsScreen(
         )
     }
 
-    // Freeze Notice Dialog (Honest platform explanation)
+    // Freeze Notice Dialog
     if (uiState.showFreezeNoticeDialog) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissFreezeNotice() },
@@ -147,34 +147,6 @@ fun CloneDetailsScreen(
             confirmButton = {
                 Button(onClick = { viewModel.dismissFreezeNotice() }) {
                     Text(stringResource(R.string.ok))
-                }
-            }
-        )
-    }
-
-    // Launch Disclaimer Dialog (Honest technical explanation for Blueprint)
-    if (uiState.showLaunchDisclaimer) {
-        AlertDialog(
-            onDismissRequest = { viewModel.dismissLaunchDisclaimer() },
-            title = { Text(stringResource(R.string.engine_launch_disclaimer_title)) },
-            text = {
-                Text(
-                    text = stringResource(R.string.engine_launch_disclaimer_desc),
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    viewModel.proceedLaunch { msg ->
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                    }
-                }) {
-                    Text(stringResource(R.string.engine_launch_proceed))
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { viewModel.dismissLaunchDisclaimer() }) {
-                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -305,7 +277,7 @@ fun CloneDetailsScreen(
                 ) {
                     Button(
                         onClick = {
-                            viewModel.requestLaunch { msg ->
+                            viewModel.launchClone { msg ->
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
                         },
@@ -418,7 +390,7 @@ fun CloneDetailsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Profile & Compatibility Metadata Card
+                // Metadata Card
                 Card(
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -444,18 +416,6 @@ fun CloneDetailsScreen(
                         MetadataRow(
                             label = stringResource(R.string.details_meta_package),
                             value = instance.originalPackageName
-                        )
-                        MetadataRow(
-                            label = stringResource(R.string.details_meta_engine),
-                            value = stringResource(instance.engineType.titleRes)
-                        )
-                        MetadataRow(
-                            label = stringResource(R.string.details_meta_profile),
-                            value = instance.profileType.name
-                        )
-                        MetadataRow(
-                            label = stringResource(R.string.details_meta_runtime_state),
-                            value = if (instance.isRuntimeVerified) stringResource(R.string.details_runtime_verified) else stringResource(R.string.details_runtime_available)
                         )
                         MetadataRow(
                             label = "Last Launched",

@@ -1,17 +1,14 @@
 package app.mirro.android.ui.home
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.drawable.Drawable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.mirro.android.data.repository.CloneInstanceRepository
 import app.mirro.android.data.repository.SettingsRepository
 import app.mirro.android.data.repository.ViewMode
+import app.mirro.android.domain.engine.CloneEngine
 import app.mirro.android.domain.engine.EngineExecutionResult
-import app.mirro.android.domain.engine.EngineRegistry
-import app.mirro.android.domain.engine.workprofile.ProfileProvisioningManager
-import app.mirro.android.domain.engine.workprofile.ProvisioningStatus
 import app.mirro.android.domain.model.CloneInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,7 +26,6 @@ data class HomeUiState(
     val items: List<CloneUiItem> = emptyList(),
     val searchQuery: String = "",
     val viewMode: ViewMode = ViewMode.GRID,
-    val provisioningStatus: ProvisioningStatus = ProvisioningStatus.Available,
     val isLoading: Boolean = false,
     val message: String? = null
 )
@@ -38,19 +34,16 @@ class HomeViewModel(
     private val context: Context,
     private val cloneRepository: CloneInstanceRepository,
     private val settingsRepository: SettingsRepository,
-    private val engineRegistry: EngineRegistry,
-    val provisioningManager: ProfileProvisioningManager = ProfileProvisioningManager(context)
+    private val cloneEngine: CloneEngine
 ) : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
-    private val _provisioningStatus = MutableStateFlow(provisioningManager.getProvisioningStatus())
 
     val uiState: StateFlow<HomeUiState> = combine(
         cloneRepository.allInstances,
         _searchQuery,
-        settingsRepository.settings,
-        _provisioningStatus
-    ) { instances, query, settings, provStatus ->
+        settingsRepository.settings
+    ) { instances, query, settings ->
         val filtered = if (query.isBlank()) {
             instances
         } else {
@@ -74,16 +67,12 @@ class HomeViewModel(
             items = uiItems,
             searchQuery = query,
             viewMode = settings.viewMode,
-            provisioningStatus = provStatus,
             isLoading = false
         )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = HomeUiState(
-            isLoading = true,
-            provisioningStatus = provisioningManager.getProvisioningStatus()
-        )
+        initialValue = HomeUiState(isLoading = true)
     )
 
     fun onSearchQueryChange(query: String) {
@@ -96,24 +85,9 @@ class HomeViewModel(
         settingsRepository.setViewMode(next)
     }
 
-    fun getProvisioningIntent(): Intent {
-        _provisioningStatus.value = ProvisioningStatus.Provisioning
-        return provisioningManager.createProvisioningIntent()
-    }
-
-    fun handleProvisioningResult(resultCode: Int) {
-        val newStatus = provisioningManager.handleActivityResult(resultCode)
-        _provisioningStatus.value = newStatus
-    }
-
-    fun refreshProvisioningStatus() {
-        _provisioningStatus.value = provisioningManager.getProvisioningStatus()
-    }
-
     fun launchInstance(instance: CloneInstance, onResult: (String) -> Unit) {
-        val engine = engineRegistry.getEngine(instance.engineType)
         viewModelScope.launch {
-            val result = engine.launchInstance(instance)
+            val result = cloneEngine.launchInstance(instance)
             when (result) {
                 is EngineExecutionResult.Success -> {
                     onResult(result.message ?: "Launched")
@@ -132,20 +106,19 @@ class HomeViewModel(
     }
 
     fun toggleFreeze(instance: CloneInstance) {
-        val engine = engineRegistry.getEngine(instance.engineType)
         viewModelScope.launch {
             if (instance.isFrozen) {
-                engine.unfreezeInstance(instance)
+                cloneEngine.unfreezeInstance(instance)
             } else {
-                engine.freezeInstance(instance)
+                cloneEngine.freezeInstance(instance)
             }
         }
     }
 
     fun deleteInstance(instance: CloneInstance) {
-        val engine = engineRegistry.getEngine(instance.engineType)
         viewModelScope.launch {
-            engine.deleteInstance(instance)
+            cloneEngine.deleteInstance(instance)
         }
     }
 }
+

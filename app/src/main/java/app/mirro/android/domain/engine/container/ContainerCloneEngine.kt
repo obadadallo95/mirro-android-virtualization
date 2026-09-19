@@ -16,7 +16,6 @@ import app.mirro.android.domain.model.CloneConfig
 import app.mirro.android.domain.model.CloneEngineType
 import app.mirro.android.domain.model.CloneInstance
 import app.mirro.android.domain.model.InstalledApp
-import app.mirro.android.domain.model.ProfileType
 import app.mirro.android.domain.model.StorageMetrics
 import app.mirro.android.ui.container.ContainerHostActivity
 import java.util.UUID
@@ -86,8 +85,6 @@ class ContainerCloneEngine(
                 badgeColorHex = config.badgeColorHex,
                 badgeSymbol = config.badgeSymbol.ifBlank { "2" },
                 engineType = CloneEngineType.VIRTUALIZED_CONTAINER,
-                profileType = ProfileType.PERSONAL,
-                userSerialNumber = 0L,
                 isRuntimeVerified = false,
                 createdAt = System.currentTimeMillis(),
                 lastLaunchedAt = null

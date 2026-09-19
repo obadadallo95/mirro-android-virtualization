@@ -283,6 +283,7 @@
     <!-- Diagnostics & Engine Test Placeholder -->
     <string name="diagnostics_title">Sandbox Diagnostics</string>
     <string name="diagnostics_subtitle">Verify system isolation primitives and keystore access</string>
+    <string name="diagnostics_developer_only_notice">Developer Mode: Sandboxing telemetry and low-level container metrics are active for debugging.</string>
     <string name="diagnostics_test_isolation">Process Isolation Check</string>
     <string name="diagnostics_test_keystore">Hardware Keystore Access</string>
     <string name="diagnostics_passed">Passed</string>

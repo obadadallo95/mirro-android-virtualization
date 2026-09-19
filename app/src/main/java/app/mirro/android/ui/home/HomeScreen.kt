@@ -1,11 +1,6 @@
 package app.mirro.android.ui.home
 
-import android.app.Activity
-import android.content.ContextWrapper
 import android.widget.Toast
-import androidx.activity.compose.LocalActivityResultRegistryOwner
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -72,7 +67,6 @@ import app.mirro.android.R
 import app.mirro.android.data.repository.ViewMode
 import app.mirro.android.domain.model.CloneInstance
 import app.mirro.android.ui.components.AppIconWithBadge
-import app.mirro.android.ui.components.MirroSpaceCard
 import app.mirro.android.ui.components.SearchField
 import app.mirro.android.ui.theme.StatusLimited
 import app.mirro.android.ui.theme.StatusSupported
@@ -87,17 +81,6 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
-
-    val registryOwner = LocalActivityResultRegistryOwner.current
-    val provisioningLauncher = if (registryOwner != null) {
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.StartActivityForResult()
-        ) { result ->
-            viewModel.handleProvisioningResult(result.resultCode)
-        }
-    } else {
-        null
-    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -178,36 +161,6 @@ fun HomeScreen(
 
             // Stats Banner (Minimal and elegant)
             HomeStatsBanner(clonesCount = uiState.items.size)
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Mirro Space (Work Profile) Isolation Status Card
-            MirroSpaceCard(
-                status = uiState.provisioningStatus,
-                onCreateSpaceClick = {
-                    try {
-                        val intent = viewModel.getProvisioningIntent()
-                        if (provisioningLauncher != null) {
-                            provisioningLauncher.launch(intent)
-                        } else {
-                            var innerContext = context
-                            while (innerContext is ContextWrapper && innerContext !is Activity) {
-                                innerContext = innerContext.baseContext
-                            }
-                            if (innerContext is Activity) {
-                                innerContext.startActivity(intent)
-                            } else {
-                                intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                                context.startActivity(intent)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        Toast.makeText(context, e.message ?: "Failed to start provisioning", Toast.LENGTH_SHORT).show()
-                        viewModel.refreshProvisioningStatus()
-                    }
-                },
-                onRefreshClick = { viewModel.refreshProvisioningStatus() }
-            )
 
             Spacer(modifier = Modifier.height(14.dp))
 

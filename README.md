@@ -63,7 +63,7 @@ The visual identity of **Mirro** is built on the convergence of three foundation
 
 ## 🏛️ Clean Architecture & Package Structure
 
-Mirro strictly decouples user interface components from cloning runtime engines and package discovery:
+Mirro strictly decouples user interface components from local persistence and the container runtime:
 
 ```
 app.mirro.android
@@ -75,62 +75,35 @@ app.mirro.android
 │   └── repository          # InstalledAppRepository, CloneInstanceRepository,
 │                           # StorageRepository, ShortcutRepository, SettingsRepository
 ├── domain
-│   ├── analyzer            # CompatibilityAnalyzer (Evidence-based PackageInfo evaluation)
+│   ├── analyzer            # CompatibilityAnalyzer (PackageInfo evaluation)
 │   ├── engine              # CloneEngine interface, EngineAvailability, EngineExecutionResult
-│   │   ├── blueprint       # BlueprintCloneEngine (Milestone 1 foundation engine)
-│   │   ├── workprofile     # WorkProfileCloneEngine (Android Enterprise DevicePolicyManager)
 │   │   └── container       # ContainerCloneEngine (User-space virtual container)
-│   └── model               # InstalledApp, CloneInstance, CloneConfig, CompatibilityStatus, StorageMetrics
+│   └── model               # InstalledApp, CloneInstance, CompatibilityStatus, StorageMetrics
 └── ui
-    ├── components          # AppIconWithBadge, CompatibilityChip, SearchField, HonestEngineNotice
+    ├── components          # AppIconWithBadge, CompatibilityChip, SearchField
+    ├── container           # ContainerHostActivity (Dedicated container runner)
     ├── details             # CloneDetailsScreen & ViewModel
-    ├── home                # HomeScreen & ViewModel (Grid/List, live filters, stats)
+    ├── home                # HomeScreen & ViewModel (Grid/List, live search, stats)
     ├── navigation          # Type-safe Screen routes
-    ├── picker              # AppPickerScreen & ViewModel (discovery, filtering)
-    ├── settings            # SettingsScreen & ArchitectureDocsScreen
-    ├── setup               # CloneSetupScreen & ViewModel (live badging preview, engine selection)
-    └── theme               # Material 3 Dynamic Color, Light/Dark palettes, Typography
+    ├── picker              # AppPickerScreen & ViewModel (app discovery)
+    ├── settings            # SettingsScreen & ContainerDiagnosticsScreen
+    ├── setup               # CloneSetupScreen & ViewModel (custom naming, badging preview)
+    ├── theme               # Material 3 Dynamic Color, Light/Dark palettes, Typography
+    └── trampoline          # MirroLaunchTrampolineActivity (Home-screen shortcut launcher)
 ```
 
 ---
 
-## ⚙️ Isolation Engine Strategies
+## ⚙️ Runtime Engine: Mirro Container
 
-### 1. Strategy A: Android Work Profile (`WorkProfileCloneEngine`)
-- **Mechanism**: Utilizes Android Enterprise APIs (`DevicePolicyManager`, `LauncherApps`) to create an OS-level managed work profile.
-- **Benefits**:
-  - 100% genuine OS-level hardware cryptographic isolation.
-  - Native Google Play Services and push notification compatibility.
-  - Zero performance overhead (runs native ART process without translation).
-- **Constraints**:
-  - Requires Profile Owner provisioning.
-  - Device manufacturer limit of 1 active work profile on standard consumer ROMs.
+Mirro uses an isolated user-space sandbox architecture (`ContainerCloneEngine`):
 
-### 2. Strategy B: Mirro Virtualized Container (`ContainerCloneEngine` - Default)
-- **Mechanism**: Modern in-app user-space sandbox architecture:
-  - **APK & DEX Inspection (`ApkInspector`)**: Discovers split APKs, native ABIs, entry application classes, and activities.
-  - **Isolated Storage Partitioning (`VirtualFileSystem`)**: Automatically creates independent sandboxes under `files/mirro_sandboxes/<clone_id>/` for data, databases, shared_prefs, cache, and code_cache.
-  - **Context Redirection (`VirtualContext`)**: Wraps and redirects application storage calls (`filesDir`, `cacheDir`, `getDatabasePath`, `getSharedPreferences`) into the clone's dedicated filesystem directory.
-  - **Multi-Process WebView Isolation**: Dynamically assigns distinct directory suffixes via `WebView.setDataDirectorySuffix("mirro_c_<clone_id>")` (Android 28+) so cloned WebView sessions, cookies, and local storage cannot clash with the host.
-  - **Container Host (`ContainerHostActivity`)**: Dedicated container activity that boots the runtime, initializes the sandboxed context, and launches the target application.
-  - **Process Management (`VirtualProcessController`)**: Controls lifecycle and freeze/unfreeze states.
-- **Benefits**:
-  - 100% free, private, on-device, and ad-free.
-  - No Work Profile or Device Admin required.
-  - No system user switching or enterprise management setup.
-  - Unlimited concurrent clone instances with custom names and badges.
-- **Constraints & Honesty**:
-  - Operates within standard Android app permissions.
-  - Does not claim kernel-level root bypass, hardware keystore spoofing, or SafetyNet/Play Integrity bypass.
-
-### 3. Strategy C: Android Work Profile (`WorkProfileCloneEngine` - Fallback)
-- **Mechanism**: Utilizes Android Enterprise APIs (`DevicePolicyManager`, `LauncherApps`) as an optional secondary fallback engine for apps requiring hardware attestation.
-
-### 3. Architecture Blueprint Staging (`BlueprintCloneEngine`)
-- Foundation engine active in Milestone 1.
-- Persists clone profiles, custom names, color badges, symbols, and launcher shortcuts in local Room SQLite storage.
-- Real-time compatibility analysis against host `PackageManager`.
-- **Honest Engineering Guarantee**: Does NOT fake process virtualization. When launch is requested in staging, it launches the base host application while explicitly informing the user that isolated sandboxing is pending implementation.
+1. **APK & DEX Inspection (`ApkInspector`)**: Reads APK descriptors, split APK paths, native ABIs, and component declarations.
+2. **Filesystem Partitioning (`VirtualFileSystem`)**: Generates private sandboxes under `files/virtual/<clone_id>/` for data, databases, shared_prefs, cache, and code_cache.
+3. **Context Redirection (`VirtualContext`)**: Intercepts and redirects storage operations to the clone's dedicated directory.
+4. **Multi-Process WebView Isolation**: Assigns unique suffixes (`WebView.setDataDirectorySuffix("mirro_<clone_id>")`) to isolate cookies and browser sessions.
+5. **Shortcut Trampoline (`MirroLaunchTrampolineActivity`)**: Transparent trampoline that routes pinned home-screen shortcuts into the container runtime.
+6. **Developer Mode**: Advanced diagnostic inspectors and sandbox tools are cleanly gated in Settings behind a Developer Mode toggle.
 
 ---
 
@@ -140,10 +113,10 @@ Mirro never claims universal compatibility based on static metadata alone. Appli
 
 | Status | Definition | Example Scenarios |
 | :--- | :--- | :--- |
-| **SUPPORTED** | Confirmed compatible via runtime isolation execution. | Verified applications following live engine tests. |
-| **LIMITED** | Identified external push notifications (FCM) or hardware keystore dependencies. | WhatsApp, Telegram, Signal (Keystore bound to single master key). |
+| **SUPPORTED** | Confirmed compatible with user-space isolation. | Verified applications following live engine tests. |
+| **LIMITED** | Identified external push notifications (FCM) or hardware keystore dependencies. | Apps requiring strict hardware attestation. |
 | **PROTECTED** | System apps or shared Linux UIDs that cannot be isolated. | Carrier apps, Settings, Device Admin apps (`android:sharedUserId`). |
-| **UNKNOWN** | Standard applications requiring runtime validation. | ChatGPT, Note apps, Browsers, and newly discovered packages. |
+
 
 ---
 

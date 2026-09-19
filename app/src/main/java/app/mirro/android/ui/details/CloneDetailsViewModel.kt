@@ -7,11 +7,8 @@ import androidx.lifecycle.viewModelScope
 import app.mirro.android.data.repository.CloneInstanceRepository
 import app.mirro.android.data.repository.InstalledAppRepository
 import app.mirro.android.domain.analyzer.CompatibilityAnalyzer
+import app.mirro.android.domain.engine.CloneEngine
 import app.mirro.android.domain.engine.EngineExecutionResult
-import app.mirro.android.domain.engine.EngineRegistry
-import app.mirro.android.domain.engine.workprofile.ProfileAppDiscoveryManager
-import app.mirro.android.domain.engine.workprofile.ProfileProvisioningManager
-import app.mirro.android.domain.model.CloneEngineType
 import app.mirro.android.domain.model.CloneInstance
 import app.mirro.android.domain.model.CompatibilityReport
 import app.mirro.android.domain.model.StorageMetrics
@@ -28,7 +25,6 @@ data class CloneDetailsUiState(
     val isLoading: Boolean = true,
     val showDeleteDialog: Boolean = false,
     val showRenameDialog: Boolean = false,
-    val showLaunchDisclaimer: Boolean = false,
     val showFreezeNoticeDialog: Boolean = false,
     val freezeNoticeMessage: String? = null,
     val isDeleted: Boolean = false,
@@ -40,12 +36,8 @@ class CloneDetailsViewModel(
     private val context: Context,
     private val cloneRepository: CloneInstanceRepository,
     private val installedAppRepository: InstalledAppRepository,
-    private val engineRegistry: EngineRegistry,
-    private val analyzer: CompatibilityAnalyzer = CompatibilityAnalyzer(),
-    private val discoveryManager: ProfileAppDiscoveryManager = ProfileAppDiscoveryManager(
-        context,
-        ProfileProvisioningManager(context)
-    )
+    private val cloneEngine: CloneEngine,
+    private val analyzer: CompatibilityAnalyzer = CompatibilityAnalyzer()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(CloneDetailsUiState())
@@ -66,21 +58,14 @@ class CloneDetailsViewModel(
                     null
                 }
 
-                val engine = engineRegistry.getEngine(instance.engineType)
-                val storage = engine?.getStorageUsage(instance) ?: StorageMetrics(apkSizeBytes = null, dataSizeBytes = null, cacheSizeBytes = null)
+                val storage = cloneEngine.getStorageUsage(instance)
                 val baseApp = installedAppRepository.getAppByPackage(instance.originalPackageName)
-
-                val inWorkProfile = if (instance.engineType == CloneEngineType.WORK_PROFILE) {
-                    discoveryManager.isAppInstalledInWorkProfile(instance.originalPackageName)
-                } else null
 
                 val compat = baseApp?.let {
                     try {
                         val pi = context.packageManager.getPackageInfo(it.packageName, 0)
                         analyzer.analyze(
                             packageInfo = pi,
-                            engineType = instance.engineType,
-                            isInstalledInWorkProfile = inWorkProfile,
                             isRuntimeLaunchVerified = instance.isRuntimeVerified
                         )
                     } catch (_: Exception) {
@@ -101,33 +86,15 @@ class CloneDetailsViewModel(
         }
     }
 
-    fun requestLaunch(onResult: (String) -> Unit) {
+    fun launchClone(onResult: (String) -> Unit) {
         val instance = _uiState.value.instance ?: return
-        if (instance.engineType == CloneEngineType.WORK_PROFILE || instance.engineType == CloneEngineType.VIRTUALIZED_CONTAINER) {
-            // Real Work Profile and Container launches execute directly
-            proceedLaunch(onResult)
-        } else {
-            // Blueprint staging shows demonstration notice
-            _uiState.value = _uiState.value.copy(showLaunchDisclaimer = true)
-        }
-    }
-
-    fun proceedLaunch(onResult: (String) -> Unit) {
-        val instance = _uiState.value.instance ?: return
-        _uiState.value = _uiState.value.copy(showLaunchDisclaimer = false)
-
-        val engine = engineRegistry.getEngine(instance.engineType)
-        if (engine == null) {
-            onResult("Engine not registered")
-            return
-        }
 
         viewModelScope.launch {
-            val result = engine.launchInstance(instance)
+            val result = cloneEngine.launchInstance(instance)
             when (result) {
                 is EngineExecutionResult.Success -> {
                     loadInstance()
-                    onResult(result.message ?: "Application launched in Mirro Space")
+                    onResult(result.message ?: "Application launched in Mirro Container")
                 }
                 is EngineExecutionResult.Failure -> {
                     onResult(result.userMessage)
@@ -142,19 +109,14 @@ class CloneDetailsViewModel(
         }
     }
 
-    fun dismissLaunchDisclaimer() {
-        _uiState.value = _uiState.value.copy(showLaunchDisclaimer = false)
-    }
-
     fun toggleFreeze(onResult: (String) -> Unit) {
         val instance = _uiState.value.instance ?: return
-        val engine = engineRegistry.getEngine(instance.engineType) ?: return
 
         viewModelScope.launch {
             val result = if (instance.isFrozen) {
-                engine.unfreezeInstance(instance)
+                cloneEngine.unfreezeInstance(instance)
             } else {
-                engine.freezeInstance(instance)
+                cloneEngine.freezeInstance(instance)
             }
 
             when (result) {
@@ -184,10 +146,9 @@ class CloneDetailsViewModel(
 
     fun createShortcut(onResult: (String) -> Unit) {
         val instance = _uiState.value.instance ?: return
-        val engine = engineRegistry.getEngine(instance.engineType) ?: return
 
         viewModelScope.launch {
-            val result = engine.createShortcut(instance)
+            val result = cloneEngine.createShortcut(instance)
             when (result) {
                 is EngineExecutionResult.Success -> {
                     onResult(result.message ?: "Shortcut added to home screen")
@@ -232,10 +193,9 @@ class CloneDetailsViewModel(
 
     fun confirmDelete() {
         val instance = _uiState.value.instance ?: return
-        val engine = engineRegistry.getEngine(instance.engineType) ?: return
 
         viewModelScope.launch {
-            engine.deleteInstance(instance)
+            cloneEngine.deleteInstance(instance)
             _uiState.value = _uiState.value.copy(
                 showDeleteDialog = false,
                 isDeleted = true
@@ -243,4 +203,3 @@ class CloneDetailsViewModel(
         }
     }
 }
-

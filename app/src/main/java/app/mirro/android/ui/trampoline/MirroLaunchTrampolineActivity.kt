@@ -7,23 +7,14 @@ import androidx.lifecycle.lifecycleScope
 import app.mirro.android.R
 import app.mirro.android.data.local.AppDatabase
 import app.mirro.android.data.repository.CloneInstanceRepository
-import app.mirro.android.domain.engine.workprofile.ProfileAppDiscoveryManager
-import app.mirro.android.domain.engine.workprofile.ProfileProvisioningManager
-import app.mirro.android.domain.engine.workprofile.WorkProfileCloneEngine
-import app.mirro.android.domain.engine.workprofile.WorkProfileLaunchResult
-import app.mirro.android.domain.model.CloneEngineType
+import app.mirro.android.domain.engine.container.ContainerCloneEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Lightweight transparent trampoline activity that handles pinned desktop shortcut launches.
- *
- * Resolves the requested [CloneInstance] and executes a real cross-profile launch
- * into the isolated Mirro Space managed profile via [WorkProfileCloneEngine].
- *
- * CRITICAL: Guarantees that desktop shortcuts for Mirro Space clones never launch
- * the personal profile application.
+ * Lightweight transparent trampoline activity that handles pinned desktop shortcut launches
+ * into Mirro's isolated user-space Container runtime.
  */
 class MirroLaunchTrampolineActivity : ComponentActivity() {
 
@@ -38,12 +29,8 @@ class MirroLaunchTrampolineActivity : ComponentActivity() {
 
         val db = AppDatabase.getInstance(applicationContext)
         val repo = CloneInstanceRepository(db.cloneInstanceDao())
-        val provisioningManager = ProfileProvisioningManager(applicationContext)
-        val discoveryManager = ProfileAppDiscoveryManager(applicationContext, provisioningManager)
-        val engine = WorkProfileCloneEngine(
+        val containerEngine = ContainerCloneEngine(
             context = applicationContext,
-            provisioningManager = provisioningManager,
-            appDiscoveryManager = discoveryManager,
             cloneRepository = repo
         )
 
@@ -62,37 +49,12 @@ class MirroLaunchTrampolineActivity : ComponentActivity() {
                 return@launch
             }
 
-            if (instance.engineType == CloneEngineType.WORK_PROFILE) {
-                val launchResult = withContext(Dispatchers.IO) {
-                    engine.executeProfileLaunch(instance)
-                }
-
-                when (launchResult) {
-                    is WorkProfileLaunchResult.Success -> {
-                        withContext(Dispatchers.IO) {
-                            repo.updateLaunchSuccess(instance.id)
-                        }
-                    }
-                    is WorkProfileLaunchResult.Failure -> {
-                        val message = launchResult.userActionRequired ?: launchResult.reason
-                        Toast.makeText(this@MirroLaunchTrampolineActivity, message, Toast.LENGTH_LONG).show()
-                    }
-                }
-            } else if (instance.engineType == CloneEngineType.VIRTUALIZED_CONTAINER) {
-                val containerEngine = app.mirro.android.domain.engine.container.ContainerCloneEngine(
-                    context = applicationContext,
-                    cloneRepository = repo
-                )
-                withContext(Dispatchers.IO) {
-                    containerEngine.launchInstance(instance)
-                }
-            } else {
-                withContext(Dispatchers.IO) {
-                    engine.launchInstance(instance)
-                }
+            withContext(Dispatchers.IO) {
+                containerEngine.launchInstance(instance)
             }
 
             finish()
         }
     }
 }
+
