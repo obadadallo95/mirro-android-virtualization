@@ -5,6 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import app.mirro.android.domain.engine.container.model.ApkDescriptor
+import app.mirro.android.domain.engine.container.model.SplitSource
+import app.mirro.android.domain.engine.container.model.SplitSourceKind
+import java.util.zip.ZipFile
 
 /**
  * Discovers and inspects installed APK properties required for container isolation.
@@ -33,6 +36,25 @@ class ApkInspector(private val context: Context) {
             val splitApkPaths = appInfo.splitSourceDirs?.toList() ?: emptyList()
             val executableSplitApkPaths = splitApkPaths.filter(ApkDexClassifier::containsDex)
             val nativeLibDir = appInfo.nativeLibraryDir ?: ""
+            val splitSources = splitApkPaths.map { splitPath ->
+                SplitSource(
+                    path = splitPath,
+                    kind = if (splitPath in executableSplitApkPaths) {
+                        SplitSourceKind.EXECUTABLE
+                    } else {
+                        SplitSourceKind.RESOURCE_OR_CONFIGURATION
+                    },
+                    available = true
+                )
+            }
+            val nativeLibraryInventory = allApkPaths(baseApkPath, splitApkPaths)
+                .flatMap(::nativeLibrariesInApk)
+            val targetNativeAbis = nativeLibraryInventory
+                .mapNotNull { entry ->
+                    entry.removePrefix("lib/").substringBefore('/')
+                        .takeIf { it != entry }
+                }
+                .distinct()
 
             val minSdk = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 appInfo.minSdkVersion
@@ -68,8 +90,11 @@ class ApkInspector(private val context: Context) {
                 splitApkPaths = splitApkPaths,
                 executableSplitApkPaths = executableSplitApkPaths,
                 nativeLibraryDir = nativeLibDir,
+                nativeLibraryInventory = nativeLibraryInventory,
+                targetNativeAbis = targetNativeAbis,
                 targetSdk = appInfo.targetSdkVersion,
                 minSdk = minSdk,
+                processName = appInfo.processName,
                 mainActivity = mainActivity,
                 applicationClassName = appInfo.className,
                 declaredActivities = declaredActivities,
@@ -77,10 +102,30 @@ class ApkInspector(private val context: Context) {
                 declaredProviders = declaredProviders,
                 declaredReceivers = declaredReceivers,
                 requestedPermissions = requestedPermissions,
-                supportedAbis = abis
+                supportedAbis = abis,
+                splitSources = splitSources
             )
         } catch (e: Exception) {
             null
         }
+    }
+
+    private fun allApkPaths(baseApkPath: String, splitApkPaths: List<String>): List<String> =
+        listOf(baseApkPath) + splitApkPaths
+
+    private fun nativeLibrariesInApk(apkPath: String): List<String> {
+        if (apkPath.isBlank()) return emptyList()
+        return runCatching {
+            ZipFile(apkPath).use { zip ->
+                zip.entries().asSequence()
+                    .filter { entry ->
+                        !entry.isDirectory &&
+                                entry.name.startsWith("lib/") &&
+                                entry.name.endsWith(".so")
+                    }
+                    .map { it.name }
+                    .toList()
+            }
+        }.getOrDefault(emptyList())
     }
 }

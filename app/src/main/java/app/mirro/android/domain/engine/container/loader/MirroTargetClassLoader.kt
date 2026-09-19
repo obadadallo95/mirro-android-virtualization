@@ -24,7 +24,7 @@ data class ClassLoadTrace(
 class MirroTargetClassLoader(
     dexPath: String,
     nativeLibraryPath: String,
-    private val hostClassLoader: ClassLoader,
+    val hostClassLoader: ClassLoader,
     val targetClassIndex: TargetClassIndex
 ) : ClassLoader(hostClassLoader) {
 
@@ -99,6 +99,15 @@ class MirroTargetClassLoader(
     fun ownershipFor(className: String): ClassLoadOwner = routingPolicy.ownerFor(className)
 
     fun targetDexLoader(): ClassLoader = targetDexClassLoader
+
+    /**
+     * The outer Mirro loader delegates target bytecode to an internal PathClassLoader. Classes
+     * therefore report that internal loader from Class.getClassLoader(); treat both objects as
+     * the same root target node in runtime diagnostics.
+     */
+    fun isTargetDefiningLoader(loader: ClassLoader?): Boolean {
+        return loader === this || loader === targetDexClassLoader
+    }
 
     private fun resolveClassIfOwnedByThisLoader(loaded: Class<*>) {
         if (loaded.classLoader === this) {

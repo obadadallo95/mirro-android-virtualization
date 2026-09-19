@@ -81,6 +81,7 @@ data class ContainerRuntimeDiagnostics(
     val processSlotName: String? = null,
     val processSlotBinding: String? = null,
     val authRoutingResult: String? = null,
+    val runtimeSession: RuntimeSession? = null,
     val logs: List<String> = emptyList(),
     val errorStackTrace: String? = null,
     val timestamp: Long = System.currentTimeMillis()

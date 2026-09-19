@@ -9,12 +9,16 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.IBinder
 import android.os.Handler
+import android.os.SystemClock
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
 import android.content.ContextWrapper
 import app.mirro.android.domain.engine.container.runtime.ContainerRuntime
+import app.mirro.android.domain.engine.container.loader.ClassResolutionCategory
+import app.mirro.android.domain.engine.container.loader.LoaderObservationPhase
+import app.mirro.android.domain.engine.container.loader.TargetActivityResolutionException
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
@@ -182,7 +186,7 @@ class TargetActivityHost(
                 targetActivity = null
             }
 
-            val activityClass = runtime.loadedRuntime.classLoader.loadClass(className)
+            val activityClass = loadTargetActivityClass(className)
             val activity = activityClass.getDeclaredConstructor().apply { isAccessible = true }.newInstance() as Activity
             val activityInfo = activityInfo(descriptor.packageName, className)
             attach(activity, intent, activityInfo)
@@ -209,6 +213,50 @@ class TargetActivityHost(
         }.onFailure { error ->
             Log.e(TAG, "Target Activity failed: $className", error)
         }
+    }
+
+    /**
+     * Some applications install secondary DEX code from Application.onCreate() or a native
+     * startup task. Give that standard runtime path a bounded opportunity to finish before
+     * declaring the launch failed. The retry is deliberately limited and never changes identity,
+     * signatures, or security checks.
+     */
+    private fun loadTargetActivityClass(className: String): Class<*> {
+        val manager = runtime.loadedRuntime.dynamicCodeManager
+            ?: return runtime.loadedRuntime.classLoader.loadClass(className)
+        var lastResolution = manager.resolveClass(
+            className = className,
+            phase = LoaderObservationPhase.COMPONENT_RESOLUTION,
+            componentResolution = true
+        )
+        repeat(20) { attempt ->
+            manager.observeSupportedBoundaries(
+                application = runtime.application,
+                context = runtime.virtualContext,
+                phase = LoaderObservationPhase.LATE_OBSERVATION
+            )
+            lastResolution = manager.resolveClass(
+                className = className,
+                phase = LoaderObservationPhase.COMPONENT_RESOLUTION,
+                componentResolution = true
+            )
+            lastResolution.resolvedClass?.let { resolved ->
+                Log.i(
+                    TAG,
+                    "Resolved target Activity $className category=${lastResolution.category} " +
+                        "loader=${lastResolution.loaderNodeId} source=${lastResolution.sourcePaths}"
+                )
+                return resolved
+            }
+
+            // Only DYNAMIC_LOADER_UNSEEN gets a bounded observation window. Other categories
+            // already provide a terminal explanation and should not be disguised as retries.
+            if (lastResolution.category != ClassResolutionCategory.DYNAMIC_LOADER_UNSEEN) {
+                throw TargetActivityResolutionException(lastResolution)
+            }
+            if (attempt < 19) SystemClock.sleep(100L)
+        }
+        throw TargetActivityResolutionException(lastResolution)
     }
 
     fun pause() {

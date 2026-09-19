@@ -13,6 +13,8 @@ import app.mirro.android.domain.engine.container.model.ApplicationBootstrapStage
 import app.mirro.android.domain.engine.container.model.ContainerLaunchResult
 import app.mirro.android.domain.engine.container.model.ContainerLaunchStatus
 import app.mirro.android.domain.engine.container.model.ContainerRuntimeDiagnostics
+import app.mirro.android.domain.engine.container.model.RuntimeFailure
+import app.mirro.android.domain.engine.container.model.RuntimeSession
 import app.mirro.android.domain.engine.container.model.VirtualRuntimeIdentity
 import app.mirro.android.domain.engine.container.storage.VirtualFileSystem
 import app.mirro.android.domain.model.CloneRuntimeState
@@ -38,6 +40,7 @@ class ContainerRuntime(
 
     private val activeRuntimes = ConcurrentHashMap<String, ActiveContainerInstance>()
     private val diagnosticLogs = ConcurrentHashMap<String, ContainerRuntimeDiagnostics>()
+    private val runtimeSessions = ConcurrentHashMap<String, RuntimeSession>()
 
     companion object {
         @Volatile
@@ -126,6 +129,13 @@ class ContainerRuntime(
         // 2. Prepare Sandbox Filesystem
         val identity = virtualFileSystem.getRuntimeIdentity(cloneId, packageName)
         log("Sandbox initialized at: ${identity.sandboxRootDir.absolutePath}")
+
+        runtimeSessions[cloneId] = RuntimeSession.create(
+            context = context,
+            descriptor = descriptor,
+            cloneId = cloneId,
+            processSlot = processStrategy.processName
+        )
 
         val processClaim = processStrategy.claim(cloneId, identity.webViewDataDirectorySuffix)
         val currentBinding = processStrategy.currentBinding()
@@ -247,6 +257,21 @@ class ContainerRuntime(
             log("Loading DEX and resources...")
             loadedRuntime = dexLoader.load(descriptor)
             log("DEX and resources loaded successfully (ClassLoader: ${loadedRuntime.classLoader})")
+            refreshRuntimeSession(cloneId, loadedRuntime)
+            val activityResolution = loadedRuntime.dynamicCodeManager
+                ?.resolutionRecords()
+                ?.lastOrNull()
+            if (activityResolution?.found != true) {
+                log(
+                    "Activity preflight unresolved: category=${activityResolution?.category ?: "NOT_ATTEMPTED"}, " +
+                        "message=${activityResolution?.message ?: "no component resolution record"}"
+                )
+            } else {
+                log(
+                    "Activity preflight resolved: ${activityResolution.className}, " +
+                        "loader=${activityResolution.loaderNodeId}, category=${activityResolution.category}"
+                )
+            }
         } catch (e: Throwable) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
@@ -300,6 +325,12 @@ class ContainerRuntime(
             virtualContext = virtualContext,
             log = ::log
         )
+        loadedRuntime.dynamicCodeManager?.observeSupportedBoundaries(
+            application = bootstrapResult.application,
+            context = virtualContext,
+            phase = app.mirro.android.domain.engine.container.loader.LoaderObservationPhase.AFTER_APPLICATION_ONCREATE
+        )
+        refreshRuntimeSession(cloneId, loadedRuntime, bootstrapResult.application)
         logClassLoaderTraces(loadedRuntime, ::log)
 
         if (!bootstrapResult.isSuccess) {
@@ -414,8 +445,19 @@ class ContainerRuntime(
      */
     fun markActivityHosted(cloneId: String) {
         val current = diagnosticLogs[cloneId] ?: return
+        activeRuntimes[cloneId]?.loadedRuntime?.let { refreshRuntimeSession(cloneId, it) }
+        runtimeSessions.computeIfPresent(cloneId) { _, session ->
+            session.withCapability(
+                app.mirro.android.domain.engine.container.model.CapabilityDecision(
+                    capability = "target_activity_hosting",
+                    status = app.mirro.android.domain.engine.container.model.CapabilityStatus.SUPPORTED,
+                    reason = "Target Activity was attached, resumed, and embedded in the host window"
+                )
+            )
+        }
         val updated = current.copy(
             launchOutcome = "ACTIVITY_HOSTED",
+            runtimeSession = runtimeSessions[cloneId],
             logs = current.logs + "${System.currentTimeMillis()}: Target Activity hosted successfully"
         )
         diagnosticLogs[cloneId] = updated
@@ -429,15 +471,26 @@ class ContainerRuntime(
      */
     fun markActivityHostFailed(cloneId: String, error: Throwable): ContainerLaunchResult {
         val current = diagnosticLogs[cloneId]
+        activeRuntimes[cloneId]?.loadedRuntime?.let { refreshRuntimeSession(cloneId, it) }
         val stackTrace = StringWriter().also { writer ->
             error.printStackTrace(PrintWriter(writer))
         }.toString()
+        runtimeSessions.computeIfPresent(cloneId) { _, session ->
+            session.withFailure(
+                RuntimeFailure(
+                    category = "ACTIVITY_HOST_FAILED",
+                    message = error.message ?: error.javaClass.name,
+                    exceptionClass = error.javaClass.name
+                )
+            )
+        }
         val updated = current?.copy(
             launchOutcome = "ACTIVITY_HOST_FAILED",
             exceptionClass = error.javaClass.name,
             exceptionMessage = error.message ?: error.localizedMessage,
             rootCauseClass = error.javaClass.name,
             rootCauseMessage = error.message ?: error.localizedMessage,
+            runtimeSession = runtimeSessions[cloneId],
             errorStackTrace = stackTrace,
             logs = current.logs + "${System.currentTimeMillis()}: Target Activity hosting failed: ${error.message}"
         )
@@ -462,9 +515,40 @@ class ContainerRuntime(
         loadedRuntime: LoadedApkRuntime,
         log: (String) -> Unit
     ) {
+        loadedRuntime.dynamicCodeManager?.snapshot()?.nodes?.forEach { node ->
+            log(
+                "Loader graph node: id=${node.id} type=${node.sourceType} class=${node.loaderClass} " +
+                    "state=${node.registrationState} phase=${node.firstObservedPhase} " +
+                    "paths=${node.codeSourcePaths.ifEmpty { listOf("<none>") }}"
+            )
+        }
         (loadedRuntime.classLoader as? MirroTargetClassLoader)?.traceSnapshot()?.forEach { trace ->
             log("Class ownership: ${trace.requestedClass} -> ${trace.owner} " +
                     "source=${trace.source ?: "n/a"} loader=${trace.definingClassLoader}")
+        }
+        loadedRuntime.dynamicCodeManager?.resolutionRecords()?.takeLast(20)?.forEach { record ->
+            log(
+                "Class resolution: ${record.className} -> ${record.category}, " +
+                    "found=${record.found}, loader=${record.loaderNodeId ?: "n/a"}, " +
+                    "source=${record.sourcePaths.ifEmpty { listOf("n/a") }}"
+            )
+        }
+    }
+
+    private fun refreshRuntimeSession(
+        cloneId: String,
+        loadedRuntime: LoadedApkRuntime,
+        application: Application? = null
+    ) {
+        val manager = loadedRuntime.dynamicCodeManager ?: return
+        runtimeSessions.computeIfPresent(cloneId) { _, session ->
+            val withRuntime = session.copy(
+                loaderGraph = manager.snapshot(),
+                nativeRuntimeState = manager.nativeRuntimeState(),
+                componentResolutionAttempts = manager.resolutionRecords(),
+                updatedAt = System.currentTimeMillis()
+            )
+            RuntimeSession.updateGuestApplicationPackage(withRuntime, application)
         }
     }
 
@@ -520,6 +604,7 @@ class ContainerRuntime(
             threadContextClassLoader = threadContextClassLoader,
             processSlotName = processSlotName,
             processSlotBinding = processSlotBinding,
+            runtimeSession = runtimeSessions[cloneId],
             logs = logs,
             errorStackTrace = stackTrace
         )

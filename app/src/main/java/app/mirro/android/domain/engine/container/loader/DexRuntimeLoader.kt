@@ -3,6 +3,7 @@ package app.mirro.android.domain.engine.container.loader
 import android.content.Context
 import android.content.res.Resources
 import app.mirro.android.domain.engine.container.model.ApkDescriptor
+import app.mirro.android.domain.engine.container.model.NativeRuntimeState
 import java.io.File
 
 /**
@@ -12,7 +13,14 @@ data class LoadedApkRuntime(
     val descriptor: ApkDescriptor,
     val classLoader: ClassLoader,
     val resources: Resources,
-    val classIndex: TargetClassIndex = TargetClassIndex.fromClassNames(emptySet())
+    val classIndex: TargetClassIndex = TargetClassIndex.fromClassNames(emptySet()),
+    val dynamicCodeManager: DynamicCodeManager? = null,
+    val nativeRuntimeState: NativeRuntimeState = NativeRuntimeState(
+        supportedAbis = emptyList(),
+        targetNativeLibraryDir = "",
+        targetNativeAbis = emptyList(),
+        apkNativeLibraryInventory = emptyList()
+    )
 )
 
 /**
@@ -37,13 +45,29 @@ class DexRuntimeLoader(private val context: Context) {
             targetClassIndex = classIndex
         )
 
+        val nativeRuntimeState = NativeRuntimeState.fromDescriptor(descriptor)
+        val dynamicCodeManager = DynamicCodeManager(
+            descriptor = descriptor,
+            rootLoader = classLoader,
+            classIndex = classIndex,
+            nativeState = nativeRuntimeState
+        )
+
         val resources = loadResources(descriptor)
 
+        val activityResolution = TargetActivityResolver.resolve(descriptor, dynamicCodeManager)
+        val resolvedDescriptor = activityResolution.activityClassName?.let { resolvedActivity ->
+            if (resolvedActivity == descriptor.mainActivity) descriptor
+            else descriptor.copy(mainActivity = resolvedActivity)
+        } ?: descriptor
+
         return LoadedApkRuntime(
-            descriptor = descriptor,
+            descriptor = resolvedDescriptor,
             classLoader = classLoader,
             resources = resources,
-            classIndex = classIndex
+            classIndex = classIndex,
+            dynamicCodeManager = dynamicCodeManager,
+            nativeRuntimeState = nativeRuntimeState
         )
     }
 
