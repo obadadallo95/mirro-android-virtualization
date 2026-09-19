@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- =================================================================== -->
+    <!-- SECTION 1: CORE APPLICATION & BRAND IDENTITY                         -->
+    <!-- =================================================================== -->
+    <string name="app_name">Mirro</string>
+    <string name="app_tagline">نفس التطبيقات. إمكانيات أكثر.</string>
+    <string name="app_version_label">الإصدار</string>
+    <string name="app_version_value">١.٠.٠ (المرحلة الأولى)</string>
+    <string name="app_description">بيئة عمل أندرويد متطورة لاستنساخ التطبيقات وتشغيل حسابات متعددة بخصوصية تامة وبدون إعلانات.</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 2: COMMON ACTIONS & CONTROLS                                -->
+    <!-- =================================================================== -->
+    <string name="back">رجوع</string>
+    <string name="close">إغلاق</string>
+    <string name="options">خيارات</string>
+    <string name="cancel">إلغاء</string>
+    <string name="ok">حسناً</string>
+    <string name="dismiss">تجاهل</string>
+    <string name="save">حفظ</string>
+    <string name="delete">حذف</string>
+    <string name="edit">تعديل</string>
+    <string name="confirm">تأكيد</string>
+    <string name="retry">إعادة المحاولة</string>
+    <string name="refresh">تحديث</string>
+    <string name="copy">نسخ</string>
+    <string name="share">مشاركة</string>
+    <string name="search">بحث</string>
+    <string name="loading">جارٍ التحميل…</string>
+    <string name="done">تم</string>
+    <string name="apply">تطبيق</string>
+    <string name="reset">إعادة ضبط</string>
+    <string name="select_all">تحديد الكل</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 3: NAVIGATION LABELS                                        -->
+    <!-- =================================================================== -->
+    <string name="nav_home">الرئيسية</string>
+    <string name="nav_apps">التطبيقات</string>
+    <string name="nav_settings">الإعدادات</string>
+    <string name="nav_vault">الخزنة</string>
+    <string name="nav_storage">التخزين</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 4: PRIMARY SCREEN — HOME                                    -->
+    <!-- =================================================================== -->
+    <string name="home_title">Mirro</string>
+    <string name="home_subtitle">نسخ معزولة • بدون أي تتبع</string>
+    <string name="home_search_placeholder">البحث في النسخ المنسوخة…</string>
+    <string name="home_stats_active_clones">نسخ نشطة</string>
+    <string name="home_stats_privacy">١٠٠٪ على الجهاز</string>
+    <string name="home_stats_no_ads">بدون إعلانات</string>
+    <string name="home_empty_title">لا توجد نسخ بعد</string>
+    <string name="home_empty_desc">قم بتشغيل حسابات متعددة لتطبيق ChatGPT أو تطبيقات المراسلة مع بيانات معزولة وخصوصية تامة.</string>
+    <string name="home_action_add">استنساخ تطبيق</string>
+    <string name="home_clones_header">النسخ الخاصة بك</string>
+    <string name="home_view_grid">عرض الشبكة</string>
+    <string name="home_view_list">عرض القائمة</string>
+    <string name="home_quick_launch_title">التشغيل السريع</string>
+    <string name="home_recent_clones">المستخدمة مؤخراً</string>
+    <string name="home_filter_all">جميع النسخ</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 5: PRIMARY SCREEN — APP PICKER                              -->
+    <!-- =================================================================== -->
+    <string name="picker_title">اختيار تطبيق</string>
+    <string name="picker_search_placeholder">البحث في التطبيقات المثبتة…</string>
+    <string name="picker_filter_all">الكل</string>
+    <string name="picker_filter_user">المثبتة</string>
+    <string name="picker_filter_system">النظام</string>
+    <string name="picker_count_format">تم العثور على %1$d تطبيقاً</string>
+    <string name="picker_empty_search">لم يتم العثور على نتائج لـ «%1$s»</string>
+    <string name="picker_empty_apps">لا توجد تطبيقات متاحة</string>
+    <string name="picker_refresh">تحديث التطبيقات</string>
+    <string name="picker_select_hint">اختر تطبيقاً مثبتاً على هاتفك لتكوين نسخة معزولة جديدة</string>
+    <string name="picker_system_apps_warning">قد تتطلب تطبيقات النظام صلاحيات إضافية متقدمة للعزل التام داخل الحاوية</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 6: PRIMARY SCREEN — CLONE SETUP                             -->
+    <!-- =================================================================== -->
+    <string name="setup_title">إعداد النسخة</string>
+    <string name="setup_original_label">التطبيق الأصلي</string>
+    <string name="setup_name_label">اسم النسخة المعروض</string>
+    <string name="setup_name_hint">مثال: ChatGPT العمل، الشخصي…</string>
+    <string name="setup_badge_color">لون شارة التمييز</string>
+    <string name="setup_badge_symbol">رمز الشارة</string>
+    <string name="setup_engine_strategy">محرك العزل</string>
+    <string name="setup_lock_toggle">طلب قفل الجهاز أو البصمة</string>
+    <string name="setup_lock_desc">طلب المصادقة الحيوية قبل فتح التطبيق</string>
+    <string name="setup_button_create">إنشاء النسخة</string>
+    <string name="setup_preview">معاينة مباشرة</string>
+    <string name="setup_advanced_options">إعدادات العزل المتقدمة</string>
+    <string name="setup_isolation_level">مستوى العزل</string>
+    <string name="setup_data_storage_path">قسم التخزين المعزول</string>
+    <string name="setup_custom_icon_label">تخصيص الشارة</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 7: PRIMARY SCREEN — CLONE DETAILS                           -->
+    <!-- =================================================================== -->
+    <string name="details_title">تفاصيل النسخة</string>
+    <string name="details_action_launch">تشغيل النسخة</string>
+    <string name="details_action_freeze">تجميد العملية</string>
+    <string name="details_action_unfreeze">إلغاء التجميد</string>
+    <string name="details_action_shortcut">إضافة للشاشة الرئيسية</string>
+    <string name="details_action_rename">تعديل الاسم</string>
+    <string name="details_action_delete">حذف النسخة</string>
+    <string name="details_storage_header">مقاييس التخزين</string>
+    <string name="details_storage_app">حزمة التطبيق (APK)</string>
+    <string name="details_storage_data">البيانات المعزولة</string>
+    <string name="details_storage_cache">الذاكرة المؤقتة</string>
+    <string name="details_storage_total">الحجم الإجمالي</string>
+    <string name="details_meta_header">معلومات الملف التعريفي</string>
+    <string name="details_meta_package">اسم الحزمة الأصلي</string>
+    <string name="details_meta_created">تاريخ الإنشاء</string>
+    <string name="details_meta_engine">استراتيجية المحرك</string>
+    <string name="details_meta_status">الحالة الحالية</string>
+    <string name="details_status_active">جاهز</string>
+    <string name="details_status_frozen">مجمد / معلق</string>
+    <string name="details_delete_confirm_title">هل تريد حذف هذه النسخة؟</string>
+    <string name="details_delete_confirm_message">سيتم حذف هذا التكوين وجميع البيانات المعزولة الخاصة به بشكل نهائي. لا يمكن التراجع عن هذا الإجراء.</string>
+    <string name="details_clear_cache_title">مسح الذاكرة المؤقتة للنسخة</string>
+    <string name="details_clear_cache_desc">إزالة ملفات الجلسة المؤقتة لاستعادة مساحة التخزين</string>
+    <string name="details_clear_data_title">إعادة تعيين بيانات النسخة</string>
+    <string name="details_clear_data_desc">مسح جميع جلسات تسجيل الدخول دون حذف النسخة</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 8: PRIMARY SCREEN — SETTINGS                                -->
+    <!-- =================================================================== -->
+    <string name="settings_title">الإعدادات</string>
+    <string name="settings_appearance">المظهر</string>
+    <string name="settings_theme_mode">نمط الألوان</string>
+    <string name="settings_theme_system">افتراضي النظام</string>
+    <string name="settings_theme_light">فاتح</string>
+    <string name="settings_theme_dark">داكن</string>
+    <string name="settings_dynamic_color">الألوان الديناميكية (Material You)</string>
+    <string name="settings_dynamic_color_desc">استخدام ألوان مستخرجة من خلفية الشاشة على أندرويد 12 فما فوق</string>
+    <string name="settings_language">اللغة</string>
+    <string name="settings_language_system">تلقائي (حسب لغة النظام)</string>
+    <string name="settings_language_en">الإنجليزية (English)</string>
+    <string name="settings_language_ar">العربية (Arabic)</string>
+    <string name="settings_security">الأمان والخصوصية</string>
+    <string name="settings_app_lock">قفل تطبيق Mirro</string>
+    <string name="settings_app_lock_desc">المطالبة بالمصادقة الحيوية لفتح Mirro</string>
+    <string name="settings_stealth_mode">الوضع المخفي</string>
+    <string name="settings_stealth_mode_desc">إخفاء عناوين النسخ ومعاينات الشاشة من مبدل التطبيقات الأخيرة</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 9: PRODUCT PHILOSOPHY GUARANTEES                            -->
+    <!-- =================================================================== -->
+    <string name="settings_philosophy">ضمانات المنتج</string>
+    <string name="guarantee_free_title">مجاني ١٠٠٪ دائماً</string>
+    <string name="guarantee_free_desc">بدون اشتراكات، بدون جدران دفع، وبدون قيود مصطنعة على عدد النسخ.</string>
+    <string name="guarantee_no_ads_title">صفر إعلانات</string>
+    <string name="guarantee_no_ads_desc">بدون شبكات إعلانية أو لافتات مزعجة. تطبيق أدوات خالص.</string>
+    <string name="guarantee_no_tracking_title">لا تتبع ولا قياس عن بعد</string>
+    <string name="guarantee_no_tracking_desc">خالٍ تماماً من حزم تحليلات المستخدم أو إرسال المعرفات إلى خوادم خارجية.</string>
+    <string name="guarantee_no_account_title">لا يتطلب إنشاء حساب</string>
+    <string name="guarantee_no_account_desc">لا حاجة لتسجيل الدخول. بيانات تطبيقاتك لا تغادر هاتفك إطلاقاً.</string>
+    <string name="guarantee_on_device_title">الخصوصية على جهازك أولاً</string>
+    <string name="guarantee_on_device_desc">تتم معالجة جميع الإحصائيات وإعدادات الاستنساخ محلياً بالكامل.</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 10: PRIMARY SCREEN — ARCHITECTURE & ENGINE DOCS            -->
+    <!-- =================================================================== -->
+    <string name="settings_architecture_title">المحرك والتقنيات</string>
+    <string name="settings_view_engine_spec">مواصفات محرك الاستنساخ</string>
+    <string name="settings_view_engine_spec_desc">قراءة تفاصيل محرك الحاوية داخل مساحة المستخدم</string>
+    <string name="arch_title">البنية الهندسية</string>
+    <string name="arch_subtitle">قيود منصة أندرويد والاستراتيجية التقنية</string>
+    <string name="arch_overview_title">الاستراتيجية المعمارية الأساسية</string>
+    <string name="arch_overview_desc">يفصل Mirro واجهة المستخدم بالكامل عن محرك تنفيذ الاستنساخ. بدلاً من الحيل البرمجية الهشة، يعتمد Mirro على أساسيات نظام أندرويد بأعلى درجات الدقة.</string>
+    <string name="arch_strategy_container_title">محرك الحاوية داخل مساحة المستخدم</string>
+    <string name="arch_strategy_container_desc">يقسم Mirro تخزين النسخ، ويفهرس فئات DEX، وينشئ سياقاً افتراضياً، ويهيئ Application المستهدف داخل فتحة عملية حاوية مخصصة.</string>
+    <string name="arch_constraints_title">أمان منصة أندرويد والقيود النظامية</string>
+    <string name="arch_constraints_desc">بدءاً من أندرويد 11 فما فوق، تتطلب قواعد رؤية الحزم تصريحات استعلام صريحة. وعلاوة على ذلك، لا يمكن ولا ينبغي تجاوز متطلبات التحقق العتادي Play Integrity.</string>
+    <string name="arch_chatgpt_case_title">اختبار القبول الأساسي: تطبيق ChatGPT</string>
+    <string name="arch_chatgpt_case_desc">تقييم com.openai.chatgpt كتطبيق اختبار القبول الأساسي. تم تصنيف التوافقية على أنها قيد التحقق بانتظار اختبار العزل الفعلي أثناء التشغيل.</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 11: PRIMARY SCREEN — BRAND IDENTITY & DESIGN SYSTEM         -->
+    <!-- =================================================================== -->
+    <string name="settings_brand_identity_title">الهوية البصرية ونظام التصميم</string>
+    <string name="settings_brand_identity_desc">استكشف مفهوم شعار Mirro والشبكة البصرية والألوان والخطوط</string>
+    <string name="brand_title">الهوية البصرية لتطبيق Mirro</string>
+    <string name="brand_subtitle">دليل الهوية ونظام التصميم الموحد</string>
+    <string name="brand_concept_title">١. مفهوم الرمز وتشريحه الهندسي</string>
+    <string name="brand_concept_subtitle">حرف M المنعكس — الانعكاس التام دون تشابك البيانات</string>
+    <string name="brand_concept_desc">يدمج رمز Mirro ثلاثة مفاهيم في رمز واحد: خط انعكاس المرآة، وحرف M باللاتينية، ومساحتين مستقلتين تماماً للتطبيق.</string>
+    <string name="brand_anatomy_01_title">خط انعكاس المرآة البصري</string>
+    <string name="brand_anatomy_01_desc">محور تماثل رأسي في المنتصف يعمل كمرآة عاكسة، مكوناً ممراً بصرياً فاصلاً بين النسختين.</string>
+    <string name="brand_anatomy_02_title">هندسة حرف M</string>
+    <string name="brand_anatomy_02_desc">عمودان رأسيان وقمتان منحنيتان وأضلاع مائلة للداخل تظهر معاً صورة حرف M بوضوح فوري وتلقائي.</string>
+    <string name="brand_anatomy_03_title">الازدواجية مع الفصل التام</string>
+    <string name="brand_anatomy_03_desc">يمثل الجناح الأيسر النسخة الأصلية الأساسية (بالأزرق الكوبالت)، بينما يمثل الجناح الأيمن النسخة المعكوسة (بالأزرق السماوي المضيء).</string>
+    <string name="brand_anatomy_04_title">الفجوة الدقيقة لمنع التشابك</string>
+    <string name="brand_anatomy_04_desc">لا يتصل النصفان أبداً عبر خط المرآة، وهو ما يعبر بصرياً عن عزل بيانات المستخدم والجلسات بين النسخ.</string>
+    <string name="brand_palette_title">٣. لوحة الألوان والأدوار الوظيفية</string>
+    <string name="brand_palette_desc">طيف الانعكاس — هادئ، واثق، ومبني خصيصاً لأندرويد</string>
+    <string name="brand_typography_title">٤. نظام الخطوط والطباعة</string>
+    <string name="brand_typography_desc">توافق خطوط عصرية بنمط Neo-Grotesque شديد الوضوح</string>
+    <string name="brand_splash_title">٥. مفهوم شاشة البداية (Splash)</string>
+    <string name="brand_splash_desc">مطابقة لمعايير واجهة SplashScreen في أندرويد 12 فما فوق</string>
+    <string name="brand_splash_tap_preview">اضغط لمعاينة شاشة البداية بالحجم الكامل</string>
+    <string name="brand_principles_title">٦. مبادئ العلامة ونبرة الخطاب</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 12: COMPATIBILITY ANALYZER & CLONE ENGINES                  -->
+    <!-- =================================================================== -->
+    <string name="compat_title">التوافقية</string>
+    <string name="compat_status_supported">مدعوم</string>
+    <string name="compat_status_limited">محدود</string>
+    <string name="compat_status_protected">محمي / مقيد</string>
+    <string name="compat_status_unknown">غير معروف / يحتاج اختبار</string>
+    <string name="compat_status_container_verified">الحاوية: تم التحقق من التشغيل</string>
+    <string name="compat_desc_supported">تطبيق أندرويد قياسي بدون علامات حظر افتراضية أو قيود أمنية على مستوى العتاد.</string>
+    <string name="compat_desc_limited">يعتمد التطبيق على خدمات Google Play أو إشعارات الدفع التي قد تواجه قيوداً جزئية في بيئات العزل.</string>
+    <string name="compat_desc_protected">يكشف التطبيق عن قيود نظام أو معرف مستخدم مشترك في بيانات الحزمة؛ أما التحقق العتادي وسلوك الشركة المصنعة فيحتاجان إلى اختبار حي.</string>
+    <string name="compat_desc_unknown">هيكل حزمة لم يتم تحليله مسبقاً. سيتم التحقق من التوافقية أثناء مرحلة العزل.</string>
+    <string name="compat_desc_container_verified">تم تشغيل كود التطبيق بنجاح داخل حاوية معزولة.</string>
+
+    <string name="engine_title_container">حاوية Mirro (الموصى بها)</string>
+    <string name="engine_desc_container">حاوية معزولة داخل التطبيق تركز على الخصوصية. تعزل ملفات النسخ وقواعد البيانات والتفضيلات وملفات تعريف الارتباط وبيانات WebView دون ملفات شخصية يديرها أندرويد.</string>
+
+    <string name="engine_dev_title">إشعار الشفافية الهندسية</string>
+    <string name="engine_dev_badge">قيد التطوير</string>
+    <string name="engine_dev_message">أساس حاوية Mirro داخل مساحة المستخدم فعال الآن. تنفذ هذه المرحلة اكتشاف APK وتحميل الفئات وإنشاء السياق الافتراضي وتهيئة Application؛ بينما تبقى استضافة Activity والتحقق النهائي مراحل مستقلة.</string>
+    <string name="engine_action_view_architecture">معاينة وثائق المحرك</string>
+    <string name="engine_launch_disclaimer_title">تشغيل تجريبي</string>
+    <string name="engine_launch_disclaimer_desc">نظراً لعدم ربط الحاوية المعزولة بعد، يمكن تشغيل التطبيق الأصلي للتحقق دون ادعاء وجود حاوية منفصلة حالياً.</string>
+    <string name="engine_launch_proceed">تشغيل التطبيق الأصلي</string>
+    <string name="status_ready">جاهز</string>
+    <string name="status_under_construction">قيد التطوير</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 13: FUTURE PRIMARY SCREEN PLACEHOLDERS                      -->
+    <!-- =================================================================== -->
+    <!-- Privacy Vault Screen Placeholder -->
+    <string name="vault_title">الخزنة السرية</string>
+    <string name="vault_subtitle">حماية وتمويه المساحات المنسوخة الحساسة</string>
+    <string name="vault_empty_title">لا توجد نسخ مخفية</string>
+    <string name="vault_empty_desc">انقل الحسابات الحساسة إلى هنا لإخفائها من شاشة التطبيق الرئيسية.</string>
+    <string name="vault_action_hide">إخفاء في الخزنة</string>
+    <string name="vault_action_unhide">إظهار النسخة</string>
+    <string name="vault_biometric_prompt">المصادقة الحيوية للوصول إلى خزنة Mirro</string>
+
+    <!-- Storage Cleaner Screen Placeholder -->
+    <string name="storage_cleaner_title">أداة تنظيف التخزين</string>
+    <string name="storage_cleaner_desc">فحص وتنظيف الذاكرة المؤقتة لجميع النسخ المعزولة</string>
+    <string name="storage_cleaner_action_scan">فحص حجم الذاكرة المؤقتة</string>
+    <string name="storage_cleaner_action_clean">تنظيف كل الذاكرة المؤقتة</string>
+    <string name="storage_cleaner_saved_format">تم تحرير %1$s من المساحة</string>
+
+    <!-- Backup & Restore Placeholder -->
+    <string name="backup_title">النسخ الاحتياطي للنسخ</string>
+    <string name="backup_subtitle">تصدير واستعادة تكوينات النسخ محلياً</string>
+    <string name="backup_action_export">تصدير إعدادات النسخة (JSON)</string>
+    <string name="backup_action_import">استيراد إعدادات النسخة</string>
+    <string name="backup_export_disclaimer">تحتوي النسخ الاحتياطية على بيانات التكوين فقط، بينما تظل رموز الجلسات مشفرة داخل التخزين الآمن.</string>
+
+    <!-- Diagnostics & Engine Test Placeholder -->
+    <string name="diagnostics_title">تشخيصات بيئة العزل</string>
+    <string name="diagnostics_subtitle">التحقق من أساسيات عزل العمليات والوصول لمستودع المفاتيح</string>
+    <string name="diagnostics_developer_only_notice">وضع المطورين: قياسات العزل ومؤشرات الحاوية الداخلية مفعلة لأغراض الفحص والتشخيص.</string>
+    <string name="diagnostics_test_isolation">فحص عزل العمليات</string>
+    <string name="diagnostics_test_keystore">الوصول لمستودع المفاتيح العتادي</string>
+    <string name="diagnostics_passed">ناجح</string>
+    <string name="diagnostics_failed">فشل</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 14: TOASTS, FEEDBACK & STATUS ALERTS                        -->
+    <!-- =================================================================== -->
+    <string name="shortcut_created">تمت إضافة الاختصار إلى الشاشة الرئيسية</string>
+    <string name="action_not_implemented">إمكانية المحرك قيد التطوير الهندسي</string>
+    <string name="status_frozen_toast">تم وضع النسخة في حالة التجميد</string>
+    <string name="status_unfrozen_toast">تم وضع النسخة في حالة الاستعداد</string>
+    <string name="status_deleted_toast">تم حذف النسخة بنجاح</string>
+    <string name="settings_about_title">حول Mirro</string>
+    <string name="settings_version_label">الإصدار</string>
+    <string name="settings_version_value">١.٠.٠ (المرحلة الأولى)</string>
+    <string name="settings_license_info">مفتوح المصدر ومتوافق مع سياسات Google Play</string>
+    <string name="details_meta_runtime_state">حالة بيئة التشغيل</string>
+    <string name="details_meta_profile">بيئة الحاوية</string>
+    <string name="details_runtime_verified">تم التحقق من التشغيل</string>
+    <string name="details_runtime_available">متاح</string>
+    <string name="details_freeze_unsupported_title">التحكم في دورة حياة الحاوية</string>
+    <string name="details_freeze_unsupported_desc">تجميد العملية غير متاح حتى يمتلك Mirro دورة حياة Activity المستضافة.</string>
+    <string name="trampoline_clone_not_found">لم يتم العثور على نسخة التطبيق</string>
+
+    <string name="error_generic">حدث خطأ غير متوقع</string>
+    <string name="error_package_not_found">تعذر العثور على حزمة التطبيق على هذا الجهاز</string>
+    <string name="error_shortcut_failed">تعذر تثبيت الاختصار على مشغل التطبيقات الحالي</string>
+</resources>

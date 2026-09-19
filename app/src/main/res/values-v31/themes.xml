@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.MyApplication" parent="android:Theme.DeviceDefault.NoActionBar">
+        <!-- Solid Mirro Brand Charcoal Background (#0F172A) -->
+        <item name="android:windowSplashScreenBackground">@color/mirro_charcoal</item>
+        <!-- Dedicated 288dp Vector safe from circular mask clipping -->
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_mirro_splash_logo</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@android:color/transparent</item>
+    </style>
+</resources>

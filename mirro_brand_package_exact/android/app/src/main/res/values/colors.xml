@@ -1,0 +1,10 @@
+<resources>
+    <color name="mirro_primary">#2563EB</color>
+    <color name="mirro_secondary">#60A5FA</color>
+    <color name="mirro_charcoal">#0F172A</color>
+    <color name="mirro_light_gray">#E2E8F0</color>
+    <color name="mirro_background">#F8FAFC</color>
+    <color name="mirro_surface">#FFFFFF</color>
+    <color name="mirro_dark_background">#0F172A</color>
+    <color name="mirro_dark_surface">#172033</color>
+</resources>

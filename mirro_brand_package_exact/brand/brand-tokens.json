@@ -1,0 +1,17 @@
+{
+  "name": "Mirro",
+  "reference": "reference/approved-brand-board.png",
+  "palette": {
+    "primary": "#2563EB",
+    "secondary": "#60A5FA",
+    "charcoal": "#0F172A",
+    "lightGray": "#E2E8F0",
+    "background": "#F8FAFC",
+    "surface": "#FFFFFF"
+  },
+  "typography": {
+    "primary": "Inter",
+    "androidAlternative": "Roboto"
+  },
+  "tagline": "Same apps. More possibilities."
+}

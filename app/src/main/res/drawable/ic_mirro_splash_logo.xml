@@ -1,0 +1,53 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="288dp"
+    android:height="288dp"
+    android:viewportWidth="288"
+    android:viewportHeight="288">
+
+    <!-- MIRRO ANDROID 12+ SPLASH SCREEN ICON SPECIFICATION
+         - Canvas: 288x288dp (Standard Android SplashScreen viewport)
+         - Inner circle mask applied by OS: Diameter = 192dp (Centered at 144, 144, radius = 96dp)
+         - Safe zone diameter: 160dp
+         - Scaled Mirro Mark dimensions: 150dp x 150dp (Centered precisely at 144, 144)
+         - Scale factor: 150 / 512 = 0.293
+         - Offset: 144 - (512 * 0.293 / 2) = 144 - 75 = 69
+    -->
+    <group
+        android:translateX="69"
+        android:translateY="69"
+        android:scaleX="0.293"
+        android:scaleY="0.293">
+
+        <!-- Left Wing / Deep Royal Blue Gradient (#3B82F6 -> #1D4ED8) -->
+        <path
+            android:pathData="M38 39 C24 43 15 53 15 69 L15 360 C15 382 27 397 48 407 L149 450 C164 456 170 447 170 432 L170 237 C170 226 176 219 185 226 L238 276 L238 140 C238 119 229 102 214 91 L95 43 C74 34 55 33 38 39 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="0"
+                    android:startY="0"
+                    android:endX="512"
+                    android:endY="512"
+                    android:startColor="#3B82F6"
+                    android:endColor="#1D4ED8"
+                    android:type="linear" />
+            </aapt:attr>
+        </path>
+
+        <!-- Right Wing / Light Blue Gradient (#7DB7FF -> #4EA0F5) -->
+        <path
+            android:pathData="M474 39 C488 43 497 53 497 69 L497 360 C497 382 485 397 464 407 L363 450 C348 456 342 447 342 432 L342 237 C342 226 336 219 327 226 L274 276 L274 140 C274 119 283 102 298 91 L417 43 C438 34 457 33 474 39 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:startX="0"
+                    android:startY="0"
+                    android:endX="512"
+                    android:endY="512"
+                    android:startColor="#7DB7FF"
+                    android:endColor="#4EA0F5"
+                    android:type="linear" />
+            </aapt:attr>
+        </path>
+    </group>
+
+</vector>
