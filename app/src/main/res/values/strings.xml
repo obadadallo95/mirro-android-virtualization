@@ -178,7 +178,7 @@
     <string name="arch_constraints_title">Android Platform Security &amp; Limits</string>
     <string name="arch_constraints_desc">Starting in Android 11+, Package Visibility rules require specific queries declarations. Furthermore, Play Integrity attestation and hardware keystores cannot and should not be subverted.</string>
     <string name="arch_chatgpt_case_title">Primary Acceptance Test: ChatGPT</string>
-    <string name="arch_chatgpt_case_desc">Evaluates com.openai.chatgpt as fully compatible under isolated sandbox staging due to standard Android application architecture and standard local session tokens.</string>
+    <string name="arch_chatgpt_case_desc">Evaluates com.openai.chatgpt as the primary acceptance-test app. Compatibility is marked as Unknown pending real runtime isolation verification.</string>
 
     <!-- =================================================================== -->
     <!-- SECTION 11: PRIMARY SCREEN — BRAND IDENTITY & DESIGN SYSTEM         -->

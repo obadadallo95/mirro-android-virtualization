@@ -178,7 +178,7 @@
     <string name="arch_constraints_title">أمان منصة أندرويد والقيود النظامية</string>
     <string name="arch_constraints_desc">بدءاً من أندرويد 11 فما فوق، تتطلب قواعد رؤية الحزم تصريحات استعلام صريحة. وعلاوة على ذلك، لا يمكن ولا ينبغي تجاوز متطلبات التحقق العتادي Play Integrity.</string>
     <string name="arch_chatgpt_case_title">اختبار القبول الأساسي: تطبيق ChatGPT</string>
-    <string name="arch_chatgpt_case_desc">تم تقييم com.openai.chatgpt بأنه متوافق تماماً في مرحلة الحاوية المعزولة نظراً لبنيته القياسية وتخزينه لرموز الجلسة محلياً.</string>
+    <string name="arch_chatgpt_case_desc">تقييم com.openai.chatgpt كتطبيق اختبار القبول الأساسي. تم تصنيف التوافقية على أنها قيد التحقق بانتظار اختبار العزل الفعلي أثناء التشغيل.</string>
 
     <!-- =================================================================== -->
     <!-- SECTION 11: PRIMARY SCREEN — BRAND IDENTITY & DESIGN SYSTEM         -->
