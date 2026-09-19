@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Solid clean dark background (#0F172A Mirro Charcoal) -->
+    <item android:drawable="@color/mirro_charcoal" />
+
+    <!-- Uncropped, centered emblem -->
+    <item
+        android:width="150dp"
+        android:height="150dp"
+        android:gravity="center"
+        android:drawable="@drawable/ic_mirro_splash_logo" />
+</layer-list>

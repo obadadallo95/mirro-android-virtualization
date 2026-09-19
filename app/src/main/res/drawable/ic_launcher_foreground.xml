@@ -1,8 +1,27 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="512" android:viewportHeight="512">
-    <path android:fillColor="#FFF4FAFF"
-        android:pathData="M38 39 C24 43 15 53 15 69 L15 360 C15 382 27 397 48 407 L149 450 C164 456 170 447 170 432 L170 237 C170 226 176 219 185 226 L238 276 L238 140 C238 119 229 102 214 91 L95 43 C74 34 55 33 38 39 Z"/>
-    <path android:fillColor="#FFB7D8FF"
-        android:pathData="M474 39 C488 43 497 53 497 69 L497 360 C497 382 485 397 464 407 L363 450 C348 456 342 447 342 432 L342 237 C342 226 336 219 327 226 L274 276 L274 140 C274 119 283 102 298 91 L417 43 C438 34 457 33 474 39 Z"/>
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- MIRRO LAUNCHER FOREGROUND: Scaled to 54dp inside 108dp (50% scale, well inside 66dp safe zone) -->
+    <!-- Group centered at (54, 54), original mark is 512x512 with center around (256, 256) -->
+    <group
+        android:pivotX="256"
+        android:pivotY="256"
+        android:scaleX="0.105"
+        android:scaleY="0.105"
+        android:translateX="-202"
+        android:translateY="-202">
+
+        <!-- Left Wing (White/Icy highlight on brand blue background) -->
+        <path
+            android:fillColor="#FFF4FAFF"
+            android:pathData="M38 39 C24 43 15 53 15 69 L15 360 C15 382 27 397 48 407 L149 450 C164 456 170 447 170 432 L170 237 C170 226 176 219 185 226 L238 276 L238 140 C238 119 229 102 214 91 L95 43 C74 34 55 33 38 39 Z" />
+
+        <!-- Right Wing (Subtle sky tint on brand blue background) -->
+        <path
+            android:fillColor="#FFB7D8FF"
+            android:pathData="M474 39 C488 43 497 53 497 69 L497 360 C497 382 485 397 464 407 L363 450 C348 456 342 447 342 432 L342 237 C342 226 336 219 327 226 L274 276 L274 140 C274 119 283 102 298 91 L417 43 C438 34 457 33 474 39 Z" />
+    </group>
 </vector>
