@@ -58,6 +58,7 @@ class VirtualServiceManager(
             Log.w(TAG, "Ignoring unresolved target service start: $intent")
             return null
         }
+        virtualContext.virtualServiceContracts.start(component, foreground)
         val running = synchronized(lock) {
             val value = runningServices.getOrPut(component.className) { RunningService(component) }
             value.started = true
@@ -88,6 +89,7 @@ class VirtualServiceManager(
 
     fun stopService(intent: Intent): Boolean {
         val component = resolveTargetService(intent) ?: return false
+        virtualContext.virtualServiceContracts.stop(component)
         val running = synchronized(lock) {
             runningServices[component.className]?.also { it.started = false }
         } ?: return false
@@ -100,6 +102,7 @@ class VirtualServiceManager(
             Log.w(TAG, "Ignoring unresolved target service bind: $intent")
             return false
         }
+        virtualContext.virtualServiceContracts.bind(component)
         val running = synchronized(lock) {
             val value = runningServices.getOrPut(component.className) { RunningService(component) }
             value.clientCount += 1

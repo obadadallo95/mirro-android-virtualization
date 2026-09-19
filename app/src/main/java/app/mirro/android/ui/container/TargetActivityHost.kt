@@ -177,6 +177,12 @@ class TargetActivityHost(
 
         Log.i(TAG, "Starting target Activity $className for ${descriptor.packageName}")
         return runCatching {
+            val logicalRecord = runtime.virtualContext.virtualActivityManager.start(intent)
+            if (logicalRecord.value != null) {
+                Log.i(TAG, "Logical Activity record created: ${logicalRecord.value?.token}")
+            } else {
+                Log.w(TAG, "Logical Activity route was not recorded: ${logicalRecord.reason}")
+            }
             val previousActivity = targetActivity
             if (previousActivity != null) {
                 val hostInstrumentation = fieldValue<Instrumentation>(hostActivity, "mInstrumentation")

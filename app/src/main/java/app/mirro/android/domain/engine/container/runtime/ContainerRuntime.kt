@@ -330,7 +330,7 @@ class ContainerRuntime(
             context = virtualContext,
             phase = app.mirro.android.domain.engine.container.loader.LoaderObservationPhase.AFTER_APPLICATION_ONCREATE
         )
-        refreshRuntimeSession(cloneId, loadedRuntime, bootstrapResult.application)
+        refreshRuntimeSession(cloneId, loadedRuntime, bootstrapResult.application, virtualContext)
         logClassLoaderTraces(loadedRuntime, ::log)
 
         if (!bootstrapResult.isSuccess) {
@@ -445,7 +445,7 @@ class ContainerRuntime(
      */
     fun markActivityHosted(cloneId: String) {
         val current = diagnosticLogs[cloneId] ?: return
-        activeRuntimes[cloneId]?.loadedRuntime?.let { refreshRuntimeSession(cloneId, it) }
+        activeRuntimes[cloneId]?.let { refreshRuntimeSession(cloneId, it.loadedRuntime, virtualContext = it.virtualContext) }
         runtimeSessions.computeIfPresent(cloneId) { _, session ->
             session.withCapability(
                 app.mirro.android.domain.engine.container.model.CapabilityDecision(
@@ -471,7 +471,7 @@ class ContainerRuntime(
      */
     fun markActivityHostFailed(cloneId: String, error: Throwable): ContainerLaunchResult {
         val current = diagnosticLogs[cloneId]
-        activeRuntimes[cloneId]?.loadedRuntime?.let { refreshRuntimeSession(cloneId, it) }
+        activeRuntimes[cloneId]?.let { refreshRuntimeSession(cloneId, it.loadedRuntime, virtualContext = it.virtualContext) }
         val stackTrace = StringWriter().also { writer ->
             error.printStackTrace(PrintWriter(writer))
         }.toString()
@@ -538,7 +538,8 @@ class ContainerRuntime(
     private fun refreshRuntimeSession(
         cloneId: String,
         loadedRuntime: LoadedApkRuntime,
-        application: Application? = null
+        application: Application? = null,
+        virtualContext: VirtualContext? = null
     ) {
         val manager = loadedRuntime.dynamicCodeManager ?: return
         runtimeSessions.computeIfPresent(cloneId) { _, session ->
@@ -546,6 +547,7 @@ class ContainerRuntime(
                 loaderGraph = manager.snapshot(),
                 nativeRuntimeState = manager.nativeRuntimeState(),
                 componentResolutionAttempts = manager.resolutionRecords(),
+                frameworkSnapshot = virtualContext?.frameworkSnapshot() ?: session.frameworkSnapshot,
                 updatedAt = System.currentTimeMillis()
             )
             RuntimeSession.updateGuestApplicationPackage(withRuntime, application)

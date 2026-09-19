@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Process
 import app.mirro.android.domain.engine.container.loader.ClassResolutionRecord
 import app.mirro.android.domain.engine.container.loader.LoaderGraphSnapshot
+import app.mirro.android.domain.engine.container.framework.VirtualFrameworkSnapshot
 import java.security.MessageDigest
 
 data class HostGuestIdentityVector(
@@ -73,6 +74,7 @@ data class RuntimeSession(
     ),
     val componentResolutionAttempts: List<ClassResolutionRecord> = emptyList(),
     val capabilityDecisions: List<CapabilityDecision> = emptyList(),
+    val frameworkSnapshot: VirtualFrameworkSnapshot? = null,
     val firstFailure: RuntimeFailure? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()

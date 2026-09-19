@@ -21,6 +21,18 @@ import app.mirro.android.domain.engine.container.model.VirtualRuntimeIdentity
 import app.mirro.android.domain.engine.container.proxy.ServiceProxyRegistry
 import app.mirro.android.domain.engine.container.proxy.VirtualPackageManager
 import app.mirro.android.domain.engine.container.proxy.VirtualServiceManager
+import app.mirro.android.domain.engine.container.framework.IntentRouter
+import app.mirro.android.domain.engine.container.framework.VirtualActivityManager
+import app.mirro.android.domain.engine.container.framework.VirtualAppOpsManager
+import app.mirro.android.domain.engine.container.framework.VirtualBroadcastManager
+import app.mirro.android.domain.engine.container.framework.VirtualContentManager
+import app.mirro.android.domain.engine.container.framework.VirtualFileProviderUriMapper
+import app.mirro.android.domain.engine.container.framework.VirtualNotificationManager
+import app.mirro.android.domain.engine.container.framework.VirtualPendingIntentManager
+import app.mirro.android.domain.engine.container.framework.VirtualServiceContractRegistry
+import app.mirro.android.domain.engine.container.framework.VirtualStorageManager
+import app.mirro.android.domain.engine.container.framework.VirtualFrameworkSnapshot
+import app.mirro.android.domain.engine.container.framework.VirtualValueOrigin
 import java.io.File
 import java.util.concurrent.Executor
 
@@ -34,6 +46,8 @@ class VirtualContext(
     val runtime: LoadedApkRuntime,
     val serviceProxyRegistry: ServiceProxyRegistry = ServiceProxyRegistry(base)
 ) : ContextWrapper(base) {
+
+    val storageManager = VirtualStorageManager(identity)
 
     @Volatile
     var targetApplication: Application? = null
@@ -83,6 +97,37 @@ class VirtualContext(
         hostPackageName = base.packageName
     )
 
+    val intentRouter = IntentRouter(identity, virtualPackageManager.registry)
+    val virtualActivityManager = VirtualActivityManager(
+        cloneId = identity.cloneId,
+        descriptor = runtime.descriptor,
+        router = intentRouter,
+        dynamicCodeManager = runtime.dynamicCodeManager
+    )
+    val virtualContentManager = VirtualContentManager(identity)
+    val fileProviderUriMapper = VirtualFileProviderUriMapper(identity)
+    val virtualServiceContracts = VirtualServiceContractRegistry(identity.cloneId)
+    val virtualBroadcastManager = VirtualBroadcastManager(identity.cloneId)
+    val virtualPendingIntentManager = VirtualPendingIntentManager(identity.cloneId, runtime.descriptor.processName ?: identity.originalPackageName)
+    val virtualNotificationManager = VirtualNotificationManager(identity.cloneId)
+    val virtualAppOpsManager: VirtualAppOpsManager get() = virtualPackageManager.appOpsManager
+
+    fun frameworkSnapshot(): VirtualFrameworkSnapshot {
+        val record = virtualPackageManager.registry.targetRecord
+        return VirtualFrameworkSnapshot(
+            packageName = record.packageName,
+            packageOrigin = VirtualValueOrigin.GUEST_VALUE,
+            activityCount = record.activities.size,
+            serviceCount = record.services.size,
+            receiverCount = record.receivers.size,
+            providerCount = record.providers.size,
+            providerAuthorities = virtualContentManager.authorities(),
+            permissionStates = virtualPackageManager.permissionManager.snapshot(),
+            appOpsModes = virtualPackageManager.appOpsManager.snapshot(),
+            storageRoot = storageManager.credentialProtectedDataDir().absolutePath
+        )
+    }
+
     override fun getApplicationContext(): Context {
         return targetApplication ?: this
     }
@@ -107,6 +152,16 @@ class VirtualContext(
     override fun getPackageManager(): PackageManager {
         return virtualPackageManager
     }
+
+    override fun checkSelfPermission(permission: String): Int =
+        virtualPackageManager.permissionManager.check(permission)
+
+    override fun checkPermission(permission: String, pid: Int, uid: Int): Int =
+        if (uid == android.os.Process.myUid()) virtualPackageManager.permissionManager.check(permission)
+        else baseContext.checkPermission(permission, pid, uid)
+
+    override fun checkCallingOrSelfPermission(permission: String): Int =
+        virtualPackageManager.permissionManager.check(permission)
 
     override fun getClassLoader(): ClassLoader {
         return runtime.classLoader
@@ -136,35 +191,22 @@ class VirtualContext(
         return baseContext.contentResolver
     }
 
-    override fun getFilesDir(): File {
-        return identity.filesDir.also { if (!it.exists()) it.mkdirs() }
-    }
+    override fun getFilesDir(): File = storageManager.filesDir()
 
-    override fun getCacheDir(): File {
-        return identity.cacheDir.also { if (!it.exists()) it.mkdirs() }
-    }
+    override fun getCacheDir(): File = storageManager.cacheDir()
 
-    override fun getCodeCacheDir(): File {
-        return identity.codeCacheDir.also { if (!it.exists()) it.mkdirs() }
-    }
+    override fun getCodeCacheDir(): File = storageManager.codeCacheDir()
 
-    override fun getNoBackupFilesDir(): File {
-        return identity.noBackupDir.also { if (!it.exists()) it.mkdirs() }
-    }
+    override fun getNoBackupFilesDir(): File = storageManager.noBackupFilesDir()
 
-    override fun getDataDir(): File {
-        return identity.sandboxRootDir.also { if (!it.exists()) it.mkdirs() }
-    }
+    override fun getDataDir(): File = storageManager.credentialProtectedDataDir()
 
     override fun getDatabasePath(name: String): File {
-        val dbDir = identity.databasesDir.also { if (!it.exists()) it.mkdirs() }
-        return File(dbDir, name)
+        return storageManager.database(name)
     }
 
     override fun getDir(name: String, mode: Int): File {
-        val dir = File(identity.sandboxRootDir, "app_$name")
-        if (!dir.exists()) dir.mkdirs()
-        return dir
+        return storageManager.namedDir(name)
     }
 
     override fun getSharedPreferences(name: String, mode: Int): SharedPreferences {
@@ -248,17 +290,11 @@ class VirtualContext(
     }
 
     override fun getExternalFilesDir(type: String?): File? {
-        val base = baseContext.getExternalFilesDir(type) ?: return getFilesDir()
-        val isolated = File(base, "virtual_${identity.cloneId}")
-        if (!isolated.exists()) isolated.mkdirs()
-        return isolated
+        return storageManager.externalFilesDir(baseContext.getExternalFilesDir(type), type)
     }
 
     override fun getExternalCacheDir(): File? {
-        val base = baseContext.externalCacheDir ?: return getCacheDir()
-        val isolated = File(base, "virtual_${identity.cloneId}")
-        if (!isolated.exists()) isolated.mkdirs()
-        return isolated
+        return storageManager.externalCacheDir(baseContext.externalCacheDir)
     }
 
     override fun createPackageContext(packageName: String, flags: Int): Context {
@@ -266,6 +302,18 @@ class VirtualContext(
             return this
         }
         return baseContext.createPackageContext(packageName, flags)
+    }
+
+    override fun startActivity(intent: Intent) {
+        val route = intentRouter.classify(intent)
+        if (route.kind == app.mirro.android.domain.engine.container.framework.IntentRouteKind.TARGET_INTERNAL) {
+            val routed = virtualActivityManager.start(intent)
+            if (routed.value == null) {
+                throw IllegalStateException(routed.reason ?: "Target Activity route unsupported")
+            }
+            return
+        }
+        baseContext.startActivity(intent)
     }
 
     override fun createConfigurationContext(overrideConfiguration: Configuration): Context {

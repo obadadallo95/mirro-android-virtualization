@@ -25,6 +25,10 @@ import android.graphics.drawable.Drawable
 import android.os.UserHandle
 import app.mirro.android.domain.engine.container.model.ApkDescriptor
 import app.mirro.android.domain.engine.container.model.VirtualRuntimeIdentity
+import app.mirro.android.domain.engine.container.framework.VirtualAppOpsManager
+import app.mirro.android.domain.engine.container.framework.VirtualPackageRegistry
+import app.mirro.android.domain.engine.container.framework.VirtualPermissionManager
+import app.mirro.android.domain.engine.container.framework.VirtualPermissionState
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -43,17 +47,27 @@ class VirtualPackageManager(
     private val hostPackageName: String
 ) : PackageManager() {
 
+    private companion object {
+        // PackageManager's public signature result is not exposed consistently across SDK stubs.
+        const val SIGNATURE_UNVERIFIED = -3
+    }
+
     private val componentStates = ConcurrentHashMap<String, Int>()
+    val registry = VirtualPackageRegistry(hostPackageManager, descriptor, identity, hostPackageName)
+    val permissionManager = VirtualPermissionManager(descriptor) { permission ->
+        hostPackageManager.checkPermission(permission, hostPackageName)
+    }
+    val appOpsManager = VirtualAppOpsManager()
 
     fun getPackageName(): String = descriptor.packageName
 
-    fun getApplicationInfo(flags: Int): ApplicationInfo = targetApplicationInfo(flags)
+    fun getApplicationInfo(flags: Int): ApplicationInfo = registry.targetApplicationInfo(flags)
 
-    fun getPackageInfo(flags: Int): PackageInfo = targetPackageInfo(flags)
+    fun getPackageInfo(flags: Int): PackageInfo = registry.targetPackageInfo(flags)
 
     override fun getApplicationInfo(packageName: String, flags: Int): ApplicationInfo {
         return if (packageName == descriptor.packageName) {
-            targetApplicationInfo(flags)
+            registry.targetApplicationInfo(flags)
         } else {
             hostPackageManager.getApplicationInfo(packageName, flags)
         }
@@ -61,7 +75,7 @@ class VirtualPackageManager(
 
     override fun getPackageInfo(packageName: String, flags: Int): PackageInfo {
         return if (packageName == descriptor.packageName) {
-            targetPackageInfo(flags)
+            registry.targetPackageInfo(flags)
         } else {
             hostPackageManager.getPackageInfo(packageName, flags)
         }
@@ -83,27 +97,21 @@ class VirtualPackageManager(
     override fun resolveActivity(intent: Intent, flags: Int): ResolveInfo? {
         val targetPackage = intent.`package` ?: intent.component?.packageName
         if (targetPackage == descriptor.packageName && intent.component != null) {
-            return ResolveInfo().apply {
-                activityInfo = ActivityInfo().apply {
-                    name = intent.component!!.className
-                    packageName = descriptor.packageName
-                    applicationInfo = targetApplicationInfo(flags)
-                }
-            }
+            return registry.resolveActivity(intent).value
         }
         return hostPackageManager.resolveActivity(intent, flags)
     }
 
     override fun checkPermission(permName: String, pkgName: String): Int {
         return if (pkgName == descriptor.packageName) {
-            if (descriptor.requestedPermissions.contains(permName)) {
-                hostPackageManager.checkPermission(permName, hostPackageName)
-            } else {
-                PERMISSION_DENIED
-            }
+            permissionManager.check(permName)
         } else {
             hostPackageManager.checkPermission(permName, pkgName)
         }
+    }
+
+    fun setVirtualPermissionState(permission: String, state: VirtualPermissionState) {
+        permissionManager.setState(permission, state)
     }
 
     /**
@@ -155,10 +163,8 @@ class VirtualPackageManager(
 
     override fun getActivityInfo(componentName: ComponentName, flags: Int): ActivityInfo {
         return if (componentName.packageName == descriptor.packageName) {
-            ActivityInfo(hostPackageManager.getActivityInfo(componentName, flags)).apply {
-                packageName = descriptor.packageName
-                applicationInfo = targetApplicationInfo(flags)
-            }
+            registry.activityInfo(componentName).value
+                ?: throw NameNotFoundException(componentName.flattenToString())
         } else {
             hostPackageManager.getActivityInfo(componentName, flags)
         }
@@ -166,10 +172,8 @@ class VirtualPackageManager(
 
     override fun getReceiverInfo(componentName: ComponentName, flags: Int): ActivityInfo {
         return if (componentName.packageName == descriptor.packageName) {
-            ActivityInfo(hostPackageManager.getReceiverInfo(componentName, flags)).apply {
-                packageName = descriptor.packageName
-                applicationInfo = targetApplicationInfo(flags)
-            }
+            registry.receiverInfo(componentName).value
+                ?: throw NameNotFoundException(componentName.flattenToString())
         } else {
             hostPackageManager.getReceiverInfo(componentName, flags)
         }
@@ -177,10 +181,8 @@ class VirtualPackageManager(
 
     override fun getServiceInfo(componentName: ComponentName, flags: Int): ServiceInfo {
         return if (componentName.packageName == descriptor.packageName) {
-            ServiceInfo(hostPackageManager.getServiceInfo(componentName, flags)).apply {
-                packageName = descriptor.packageName
-                applicationInfo = targetApplicationInfo(flags)
-            }
+            registry.serviceInfo(componentName).value
+                ?: throw NameNotFoundException(componentName.flattenToString())
         } else {
             hostPackageManager.getServiceInfo(componentName, flags)
         }
@@ -188,10 +190,8 @@ class VirtualPackageManager(
 
     override fun getProviderInfo(componentName: ComponentName, flags: Int): ProviderInfo {
         return if (componentName.packageName == descriptor.packageName) {
-            ProviderInfo(hostPackageManager.getProviderInfo(componentName, flags)).apply {
-                packageName = descriptor.packageName
-                applicationInfo = targetApplicationInfo(flags)
-            }
+            registry.providerInfo(componentName).value
+                ?: throw NameNotFoundException(componentName.flattenToString())
         } else {
             hostPackageManager.getProviderInfo(componentName, flags)
         }
@@ -229,8 +229,8 @@ class VirtualPackageManager(
     override fun getResourcesForApplication(info: ApplicationInfo): Resources = hostPackageManager.getResourcesForApplication(info)
     override fun getResourcesForApplication(packageName: String): Resources = hostPackageManager.getResourcesForApplication(packageName)
 
-    override fun getInstalledApplications(flags: Int): List<ApplicationInfo> = hostPackageManager.getInstalledApplications(flags)
-    override fun getInstalledPackages(flags: Int): List<PackageInfo> = hostPackageManager.getInstalledPackages(flags)
+    override fun getInstalledApplications(flags: Int): List<ApplicationInfo> = registry.visibleTargetPackages().mapNotNull { it.applicationInfo }
+    override fun getInstalledPackages(flags: Int): List<PackageInfo> = registry.visibleTargetPackages()
     override fun getPackagesHoldingPermissions(permissions: Array<String>, flags: Int): List<PackageInfo> =
         hostPackageManager.getPackagesHoldingPermissions(permissions, flags)
     override fun getInstalledApplications(flags: PackageManager.ApplicationInfoFlags): List<ApplicationInfo> =
@@ -251,43 +251,76 @@ class VirtualPackageManager(
     override fun getSharedLibraries(flags: PackageManager.PackageInfoFlags): List<SharedLibraryInfo> =
         getSharedLibraries(flags.value.toInt())
 
-    override fun queryIntentActivities(intent: Intent, flags: Int): List<ResolveInfo> = hostPackageManager.queryIntentActivities(intent, flags)
+    override fun queryIntentActivities(intent: Intent, flags: Int): List<ResolveInfo> {
+        val target = intent.`package` == descriptor.packageName || intent.component?.packageName == descriptor.packageName
+        return if (target) registry.resolveActivity(intent).value?.let(::listOf).orEmpty()
+        else hostPackageManager.queryIntentActivities(intent, flags)
+    }
     override fun queryIntentActivities(intent: Intent, flags: PackageManager.ResolveInfoFlags): List<ResolveInfo> =
         queryIntentActivities(intent, flags.value.toInt())
     override fun queryIntentActivityOptions(caller: ComponentName?, specifics: Array<Intent>?, intent: Intent, flags: Int): List<ResolveInfo> =
         hostPackageManager.queryIntentActivityOptions(caller, specifics, intent, flags)
-    override fun queryBroadcastReceivers(intent: Intent, flags: Int): List<ResolveInfo> = hostPackageManager.queryBroadcastReceivers(intent, flags)
+    override fun queryBroadcastReceivers(intent: Intent, flags: Int): List<ResolveInfo> {
+        if (intent.`package` != descriptor.packageName && intent.component?.packageName != descriptor.packageName) {
+            return hostPackageManager.queryBroadcastReceivers(intent, flags)
+        }
+        val component = intent.component ?: return emptyList()
+        return registry.receiverInfo(component).value?.let { ResolveInfo().apply { activityInfo = it } }?.let(::listOf).orEmpty()
+    }
     override fun queryBroadcastReceivers(intent: Intent, flags: PackageManager.ResolveInfoFlags): List<ResolveInfo> =
         queryBroadcastReceivers(intent, flags.value.toInt())
-    override fun queryIntentServices(intent: Intent, flags: Int): List<ResolveInfo> = hostPackageManager.queryIntentServices(intent, flags)
+    override fun queryIntentServices(intent: Intent, flags: Int): List<ResolveInfo> {
+        val target = intent.`package` == descriptor.packageName || intent.component?.packageName == descriptor.packageName
+        return if (target) registry.resolveService(intent).value?.let(::listOf).orEmpty()
+        else hostPackageManager.queryIntentServices(intent, flags)
+    }
     override fun queryIntentServices(intent: Intent, flags: PackageManager.ResolveInfoFlags): List<ResolveInfo> =
         queryIntentServices(intent, flags.value.toInt())
     override fun queryIntentContentProviders(intent: Intent, flags: Int): List<ResolveInfo> = hostPackageManager.queryIntentContentProviders(intent, flags)
     override fun queryIntentContentProviders(intent: Intent, flags: PackageManager.ResolveInfoFlags): List<ResolveInfo> =
         queryIntentContentProviders(intent, flags.value.toInt())
-    override fun resolveContentProvider(name: String, flags: Int): ProviderInfo? = hostPackageManager.resolveContentProvider(name, flags)
-    override fun resolveService(intent: Intent, flags: Int): ResolveInfo? = hostPackageManager.resolveService(intent, flags)
+    override fun resolveContentProvider(name: String, flags: Int): ProviderInfo? =
+        registry.resolveProvider(name).value ?: hostPackageManager.resolveContentProvider(name, flags)
+    override fun resolveService(intent: Intent, flags: Int): ResolveInfo? =
+        if (intent.`package` == descriptor.packageName || intent.component?.packageName == descriptor.packageName) {
+            registry.resolveService(intent).value
+        } else hostPackageManager.resolveService(intent, flags)
     override fun queryContentProviders(processName: String?, uid: Int, flags: Int): List<ProviderInfo> = hostPackageManager.queryContentProviders(processName, uid, flags)
     override fun queryContentProviders(processName: String?, uid: Int, flags: PackageManager.ComponentInfoFlags): List<ProviderInfo> =
         queryContentProviders(processName, uid, flags.value.toInt())
 
-    override fun getLaunchIntentForPackage(packageName: String): Intent? = hostPackageManager.getLaunchIntentForPackage(packageName)
+    override fun getLaunchIntentForPackage(packageName: String): Intent? {
+        if (packageName == descriptor.packageName) {
+            return descriptor.mainActivity?.let { Intent(Intent.ACTION_MAIN).setClassName(packageName, it) }
+        }
+        return hostPackageManager.getLaunchIntentForPackage(packageName)
+    }
     override fun getLeanbackLaunchIntentForPackage(packageName: String): Intent? = hostPackageManager.getLeanbackLaunchIntentForPackage(packageName)
-    override fun getNameForUid(uid: Int): String? = hostPackageManager.getNameForUid(uid)
-    override fun getPackageGids(packageName: String): IntArray = hostPackageManager.getPackageGids(packageName)
-    override fun getPackageGids(packageName: String, flags: Int): IntArray = hostPackageManager.getPackageGids(packageName, flags)
+    override fun getNameForUid(uid: Int): String? = if (uid == android.os.Process.myUid()) descriptor.packageName else hostPackageManager.getNameForUid(uid)
+    override fun getPackageGids(packageName: String): IntArray =
+        if (packageName == descriptor.packageName) hostPackageManager.getPackageGids(hostPackageName)
+        else hostPackageManager.getPackageGids(packageName)
+    override fun getPackageGids(packageName: String, flags: Int): IntArray =
+        if (packageName == descriptor.packageName) hostPackageManager.getPackageGids(hostPackageName, flags)
+        else hostPackageManager.getPackageGids(packageName, flags)
     override fun getPackageGids(packageName: String, flags: PackageManager.PackageInfoFlags): IntArray =
         getPackageGids(packageName, flags.value.toInt())
     override fun getPackageUid(packageName: String, flags: Int): Int =
-        if (packageName == descriptor.packageName) hostPackageManager.getPackageUid(hostPackageName, flags) else hostPackageManager.getPackageUid(packageName, flags)
+        if (packageName == descriptor.packageName) android.os.Process.myUid() else hostPackageManager.getPackageUid(packageName, flags)
     override fun getPackageUid(packageName: String, flags: PackageManager.PackageInfoFlags): Int =
         getPackageUid(packageName, flags.value.toInt())
-    override fun getPackagesForUid(uid: Int): Array<String>? = hostPackageManager.getPackagesForUid(uid)
-    override fun getInstallerPackageName(packageName: String): String? = hostPackageManager.getInstallerPackageName(packageName)
+    override fun getPackagesForUid(uid: Int): Array<String>? =
+        if (uid == android.os.Process.myUid()) arrayOf(descriptor.packageName) else hostPackageManager.getPackagesForUid(uid)
+    override fun getInstallerPackageName(packageName: String): String? =
+        if (packageName == descriptor.packageName) null else hostPackageManager.getInstallerPackageName(packageName)
     override fun getPackageInstaller(): PackageInstaller = hostPackageManager.packageInstaller
 
-    override fun checkSignatures(uid1: Int, uid2: Int): Int = hostPackageManager.checkSignatures(uid1, uid2)
-    override fun checkSignatures(packageName1: String, packageName2: String): Int = hostPackageManager.checkSignatures(packageName1, packageName2)
+    override fun checkSignatures(uid1: Int, uid2: Int): Int =
+        if (uid1 == android.os.Process.myUid() || uid2 == android.os.Process.myUid()) SIGNATURE_UNVERIFIED
+        else hostPackageManager.checkSignatures(uid1, uid2)
+    override fun checkSignatures(packageName1: String, packageName2: String): Int =
+        if (packageName1 == descriptor.packageName || packageName2 == descriptor.packageName) SIGNATURE_UNVERIFIED
+        else hostPackageManager.checkSignatures(packageName1, packageName2)
     override fun canonicalToCurrentPackageNames(names: Array<String>): Array<String> = hostPackageManager.canonicalToCurrentPackageNames(names)
     override fun currentToCanonicalPackageNames(names: Array<String>): Array<String> = hostPackageManager.currentToCanonicalPackageNames(names)
     override fun getSystemAvailableFeatures(): Array<FeatureInfo> = hostPackageManager.systemAvailableFeatures
@@ -326,53 +359,4 @@ class VirtualPackageManager(
     override fun extendVerificationTimeout(id: Int, verificationCodeAtTimeout: Int, millisecondsToDelay: Long) = hostPackageManager.extendVerificationTimeout(id, verificationCodeAtTimeout, millisecondsToDelay)
     override fun verifyPendingInstall(id: Int, verificationCode: Int) = hostPackageManager.verifyPendingInstall(id, verificationCode)
 
-    private fun targetApplicationInfo(flags: Int): ApplicationInfo {
-        val appInfo = try {
-            ApplicationInfo(hostPackageManager.getApplicationInfo(descriptor.packageName, flags))
-        } catch (_: Exception) {
-            ApplicationInfo().apply {
-                packageName = descriptor.packageName
-                className = descriptor.applicationClassName
-                name = descriptor.applicationClassName
-            }
-        }
-
-        appInfo.packageName = descriptor.packageName
-        appInfo.sourceDir = descriptor.baseApkPath
-        appInfo.publicSourceDir = descriptor.baseApkPath
-        if (descriptor.splitApkPaths.isNotEmpty()) {
-            appInfo.splitSourceDirs = descriptor.splitApkPaths.toTypedArray()
-            appInfo.splitPublicSourceDirs = descriptor.splitApkPaths.toTypedArray()
-        }
-        appInfo.nativeLibraryDir = descriptor.nativeLibraryDir
-        appInfo.targetSdkVersion = descriptor.targetSdk
-        appInfo.minSdkVersion = descriptor.minSdk
-        appInfo.dataDir = identity.sandboxRootDir.absolutePath
-        appInfo.deviceProtectedDataDir = identity.sandboxRootDir.absolutePath
-        return appInfo
-    }
-
-    private fun targetPackageInfo(flags: Int): PackageInfo {
-        return try {
-            val original = hostPackageManager.getPackageInfo(descriptor.packageName, flags)
-            PackageInfo().apply {
-                packageName = descriptor.packageName
-                versionName = original.versionName
-                versionCode = original.versionCode
-                applicationInfo = targetApplicationInfo(flags)
-                activities = original.activities
-                services = original.services
-                providers = original.providers
-                receivers = original.receivers
-                permissions = original.permissions
-                requestedPermissions = original.requestedPermissions
-            }
-        } catch (_: Exception) {
-            PackageInfo().apply {
-                packageName = descriptor.packageName
-                versionName = descriptor.versionName
-                applicationInfo = targetApplicationInfo(flags)
-            }
-        }
-    }
 }

@@ -53,6 +53,16 @@ class TargetFrameworkProviderBootstrapper {
                     if (!provider.onCreate()) {
                         log("Target provider onCreate returned false: $providerClassName")
                     }
+                    providerInfo.authority
+                        ?.split(';')
+                        ?.filter { it.isNotBlank() }
+                        ?.forEach { authority ->
+                            virtualContext.virtualContentManager.register(
+                                authority = authority,
+                                providerName = providerClassName,
+                                provider = provider
+                            )
+                        }
                     providers += provider
                     log("Target framework provider initialized before Application.onCreate: $providerClassName")
                 }.onFailure { error ->

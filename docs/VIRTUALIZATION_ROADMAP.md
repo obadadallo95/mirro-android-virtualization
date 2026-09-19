@@ -89,6 +89,16 @@ lightweight baseline did not qualify because it failed at the host lifecycle/GMS
 identity boundary. A real dynamic-feature/native/in-memory fixture remains
 outstanding, so this does not change the roadmap's compatibility claims.
 
+### Phase 2/Core Phase 3 implementation status (2026-09-20)
+
+The first general virtual-framework foundation is now implemented: target package/component
+metadata is owned by `VirtualPackageRegistry`; permissions and AppOps have explicit clone-local
+state; storage paths have a single `VirtualStorageManager`; and logical Activity/task, intent,
+provider/FileProvider, service, broadcast, PendingIntent, and notification contracts are exposed
+through composable runtime services. The new contract suite passes alongside the existing runtime
+tests. This is a foundation slice, not a claim of full Android framework emulation; GMS/Binder
+identity remains intentionally deferred.
+
 ### Objective
 
 Replace the single startup class-loader assumption with a measured guest loader graph and native-load capability.
