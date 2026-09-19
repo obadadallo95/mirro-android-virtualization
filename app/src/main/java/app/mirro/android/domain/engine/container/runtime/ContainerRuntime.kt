@@ -53,6 +53,18 @@ class ContainerRuntime(
 
     fun activeInstance(cloneId: String): ActiveContainerInstance? = activeRuntimes[cloneId]
 
+    /**
+     * Tears down the in-process runtime bookkeeping. A different clone still requires a fresh
+     * :container process because WebView's data-directory suffix is process-global and immutable
+     * after initialization.
+     */
+    fun releaseContainer(cloneId: String): Boolean {
+        val removed = activeRuntimes.remove(cloneId) != null
+        val released = processStrategy.release(cloneId)
+        if (released) currentProcessWebViewSuffix = null
+        return removed || released
+    }
+
     data class RuntimeStateEvent(
         val cloneId: String,
         val state: CloneRuntimeState,

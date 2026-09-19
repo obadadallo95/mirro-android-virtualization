@@ -18,5 +18,8 @@ class ContainerProcessStrategyTest {
         assertEquals(ProcessSlotClaim.ALREADY_BOUND_TO_CLONE, strategy.claim("clone-a", "mirro_a"))
         assertEquals(ProcessSlotClaim.BOUND_TO_OTHER_CLONE, strategy.claim("clone-b", "mirro_b"))
         assertEquals("clone-a", strategy.currentBinding()?.cloneId)
+        assertEquals(true, strategy.release("clone-a"))
+        assertEquals(null, strategy.currentBinding())
+        assertEquals(ProcessSlotClaim.ACQUIRED, strategy.claim("clone-b", "mirro_b"))
     }
 }

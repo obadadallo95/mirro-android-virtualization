@@ -85,6 +85,7 @@ class ContainerHostActivity : ComponentActivity() {
     private lateinit var containerRuntime: ContainerRuntime
     private lateinit var cloneRepository: CloneInstanceRepository
     private var targetActivityHost: TargetActivityHost? = null
+    private var activeCloneId: String? = null
     private val runtimeStatePersistenceDispatcher = Dispatchers.IO.limitedParallelism(1)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,6 +116,7 @@ class ContainerHostActivity : ComponentActivity() {
         val customName = intent.getStringExtra(EXTRA_CUSTOM_NAME) ?: "Clone Instance"
         val badgeColorHex = intent.getStringExtra(EXTRA_BADGE_COLOR) ?: "#6750A4"
         val badgeSymbol = intent.getStringExtra(EXTRA_BADGE_SYMBOL) ?: "2"
+        activeCloneId = cloneId
 
         var launchResult = if (cloneId.isNotEmpty() && packageName.isNotEmpty()) {
             containerRuntime.prepareContainer(cloneId, packageName)
@@ -192,7 +194,15 @@ class ContainerHostActivity : ComponentActivity() {
     override fun onDestroy() {
         targetActivityHost?.destroy()
         targetActivityHost = null
+        activeCloneId?.let(containerRuntime::releaseContainer)
+        activeCloneId = null
         super.onDestroy()
+
+        // The dedicated process owns WebView's process-global suffix. Kill it after a real exit
+        // so the next clone starts with clean classloader/WebView state and a new suffix.
+        if (isFinishing && !isChangingConfigurations) {
+            android.os.Process.killProcess(android.os.Process.myPid())
+        }
     }
 }
 

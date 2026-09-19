@@ -25,6 +25,9 @@ interface ContainerProcessStrategy {
     fun claim(cloneId: String, webViewSuffix: String): ProcessSlotClaim
 
     fun currentBinding(): ProcessSlotBinding?
+
+    /** Releases the slot only when the caller still owns it. */
+    fun release(cloneId: String): Boolean
 }
 
 class SingleCloneProcessSlotStrategy(
@@ -48,6 +51,15 @@ class SingleCloneProcessSlotStrategy(
     }
 
     override fun currentBinding(): ProcessSlotBinding? = binding.get()
+
+    override fun release(cloneId: String): Boolean {
+        synchronized(LOCK) {
+            val current = binding.get() ?: return false
+            if (current.cloneId != cloneId) return false
+            binding.set(null)
+            return true
+        }
+    }
 
     companion object {
         private val LOCK = Any()
