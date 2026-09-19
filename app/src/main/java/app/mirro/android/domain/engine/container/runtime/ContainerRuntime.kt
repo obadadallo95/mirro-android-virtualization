@@ -8,6 +8,7 @@ import app.mirro.android.domain.engine.container.context.VirtualContext
 import app.mirro.android.domain.engine.container.inspector.ApkInspector
 import app.mirro.android.domain.engine.container.loader.DexRuntimeLoader
 import app.mirro.android.domain.engine.container.loader.LoadedApkRuntime
+import app.mirro.android.domain.engine.container.model.ApplicationBootstrapStage
 import app.mirro.android.domain.engine.container.model.ContainerLaunchResult
 import app.mirro.android.domain.engine.container.model.ContainerLaunchStatus
 import app.mirro.android.domain.engine.container.model.ContainerRuntimeDiagnostics
@@ -27,7 +28,8 @@ class ContainerRuntime(
     private val context: Context,
     val virtualFileSystem: VirtualFileSystem = VirtualFileSystem(context),
     val apkInspector: ApkInspector = ApkInspector(context),
-    val dexLoader: DexRuntimeLoader = DexRuntimeLoader(context)
+    val dexLoader: DexRuntimeLoader = DexRuntimeLoader(context),
+    val applicationBootstrapper: ApplicationBootstrapper = ApplicationBootstrapper()
 ) {
 
     private val activeRuntimes = ConcurrentHashMap<String, ActiveContainerInstance>()
@@ -70,6 +72,7 @@ class ContainerRuntime(
                 appInitResult = "SKIPPED",
                 webViewResult = "SKIPPED",
                 outcome = "APK_NOT_FOUND",
+                bootstrapStage = ApplicationBootstrapStage.NOT_STARTED,
                 logs = logEntries
             )
             diagnosticLogs[cloneId] = diag
@@ -117,7 +120,7 @@ class ContainerRuntime(
         try {
             log("Loading DEX and resources...")
             loadedRuntime = dexLoader.load(descriptor)
-            log("DEX and resources loaded successfully")
+            log("DEX and resources loaded successfully (ClassLoader: ${loadedRuntime.classLoader})")
         } catch (e: Throwable) {
             val sw = StringWriter()
             e.printStackTrace(PrintWriter(sw))
@@ -134,6 +137,7 @@ class ContainerRuntime(
                 appInitResult = "SKIPPED",
                 webViewResult = webViewResult,
                 outcome = "CLASSLOADER_FAILED",
+                bootstrapStage = ApplicationBootstrapStage.NOT_STARTED,
                 logs = logEntries,
                 stackTrace = sw.toString()
             )
@@ -152,40 +156,57 @@ class ContainerRuntime(
             identity = identity,
             runtime = loadedRuntime
         )
-        log("VirtualContext bound to package ${virtualContext.packageName}")
+        log("VirtualContext bound to package ${virtualContext.packageName} with sandbox dataDir ${virtualContext.dataDir.absolutePath}")
 
-        // 6. Instantiate Target Application class if present
-        var targetApp: Application? = null
-        var appInitResult = "DEFAULT_APPLICATION"
-        if (loadedRuntime.applicationClass != null) {
-            try {
-                val appInstance = loadedRuntime.applicationClass.getDeclaredConstructor().newInstance()
-                if (appInstance is Application) {
-                    targetApp = appInstance
-                    // Attach base context via reflection if attachBaseContext is protected
-                    try {
-                        val attachMethod = Application::class.java.getDeclaredMethod("attachBaseContext", Context::class.java)
-                        attachMethod.isAccessible = true
-                        attachMethod.invoke(targetApp, virtualContext)
-                        targetApp.onCreate()
-                        appInitResult = "CUSTOM_APPLICATION_INITIALIZED (${loadedRuntime.applicationClass.name})"
-                        log("Target Application initialized: ${loadedRuntime.applicationClass.name}")
-                    } catch (e: Exception) {
-                        appInitResult = "ATTACH_FAILED (${e.message}), USING_CONTAINER_CONTEXT"
-                        log("Application attach warning: ${e.message}")
-                    }
-                }
-            } catch (e: Exception) {
-                appInitResult = "INSTANTIATION_FAILED: ${e.message}"
-                log("Target Application instantiation notice: ${e.message}")
-            }
+        // 6. Application Lifecycle Bootstrap (Structured Stages)
+        log("Starting Application lifecycle bootstrap...")
+        val bootstrapResult = applicationBootstrapper.bootstrap(
+            applicationClassName = descriptor.applicationClassName,
+            classLoader = loadedRuntime.classLoader,
+            virtualContext = virtualContext,
+            log = ::log
+        )
+
+        if (!bootstrapResult.isSuccess) {
+            val diag = createDiagnostics(
+                cloneId = cloneId,
+                packageName = packageName,
+                apkPath = descriptor.baseApkPath,
+                splitCount = descriptor.splitApkPaths.size,
+                mainActivity = descriptor.mainActivity,
+                appClass = descriptor.applicationClassName,
+                classloaderResult = "SUCCESS (Loaded ${loadedRuntime.classLoader})",
+                resourcesResult = "SUCCESS (${loadedRuntime.resources})",
+                appInitResult = bootstrapResult.summary,
+                webViewResult = webViewResult,
+                outcome = "APPLICATION_BOOTSTRAP_FAILED",
+                bootstrapStage = bootstrapResult.currentStage,
+                failedStage = bootstrapResult.failedStage,
+                exceptionClass = bootstrapResult.exceptionClass,
+                exceptionMessage = bootstrapResult.exceptionMessage,
+                rootCauseClass = bootstrapResult.rootCauseClass,
+                rootCauseMessage = bootstrapResult.rootCauseMessage,
+                appClassLoader = bootstrapResult.appClassLoaderInfo,
+                virtualContextClassLoader = bootstrapResult.virtualContextClassLoaderInfo,
+                threadContextClassLoader = bootstrapResult.threadClassLoaderInfo,
+                logs = logEntries,
+                stackTrace = bootstrapResult.stackTrace
+            )
+            diagnosticLogs[cloneId] = diag
+
+            return ContainerLaunchResult(
+                status = ContainerLaunchStatus.APPLICATION_BOOTSTRAP_FAILED,
+                message = "Application bootstrap failed at stage ${bootstrapResult.failedStage}: ${bootstrapResult.exceptionMessage}",
+                diagnostics = diag,
+                exception = bootstrapResult.rawException
+            )
         }
 
         val activeInstance = ActiveContainerInstance(
             identity = identity,
             loadedRuntime = loadedRuntime,
             virtualContext = virtualContext,
-            application = targetApp
+            application = bootstrapResult.application
         )
         activeRuntimes[cloneId] = activeInstance
 
@@ -198,16 +219,20 @@ class ContainerRuntime(
             appClass = descriptor.applicationClassName,
             classloaderResult = "SUCCESS (Loaded ${loadedRuntime.classLoader})",
             resourcesResult = "SUCCESS (${loadedRuntime.resources})",
-            appInitResult = appInitResult,
+            appInitResult = bootstrapResult.summary,
             webViewResult = webViewResult,
-            outcome = "LAUNCH_SUCCESS",
+            outcome = "APPLICATION_BOOTSTRAP_SUCCESS",
+            bootstrapStage = ApplicationBootstrapStage.APPLICATION_ONCREATE_COMPLETED,
+            appClassLoader = bootstrapResult.appClassLoaderInfo,
+            virtualContextClassLoader = bootstrapResult.virtualContextClassLoaderInfo,
+            threadContextClassLoader = bootstrapResult.threadClassLoaderInfo,
             logs = logEntries
         )
         diagnosticLogs[cloneId] = diag
 
         return ContainerLaunchResult(
-            status = ContainerLaunchStatus.LAUNCH_SUCCESS,
-            message = "Container runtime initialized for $packageName",
+            status = ContainerLaunchStatus.APPLICATION_BOOTSTRAP_SUCCESS,
+            message = "Application bootstrap completed for $packageName",
             diagnostics = diag
         )
     }
@@ -228,6 +253,15 @@ class ContainerRuntime(
         appInitResult: String,
         webViewResult: String,
         outcome: String,
+        bootstrapStage: ApplicationBootstrapStage = ApplicationBootstrapStage.NOT_STARTED,
+        failedStage: ApplicationBootstrapStage? = null,
+        exceptionClass: String? = null,
+        exceptionMessage: String? = null,
+        rootCauseClass: String? = null,
+        rootCauseMessage: String? = null,
+        appClassLoader: String? = null,
+        virtualContextClassLoader: String? = null,
+        threadContextClassLoader: String? = null,
         logs: List<String>,
         stackTrace: String? = null
     ): ContainerRuntimeDiagnostics {
@@ -246,8 +280,18 @@ class ContainerRuntime(
             applicationInitResult = appInitResult,
             webViewSuffixResult = webViewResult,
             launchOutcome = outcome,
+            bootstrapStage = bootstrapStage,
+            failedStage = failedStage,
+            exceptionClass = exceptionClass,
+            exceptionMessage = exceptionMessage,
+            rootCauseClass = rootCauseClass,
+            rootCauseMessage = rootCauseMessage,
+            applicationClassLoader = appClassLoader,
+            virtualContextClassLoader = virtualContextClassLoader,
+            threadContextClassLoader = threadContextClassLoader,
             logs = logs,
             errorStackTrace = stackTrace
         )
     }
 }
+

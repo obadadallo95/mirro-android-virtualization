@@ -116,11 +116,10 @@ class ContainerCloneEngine(
             }
 
             context.startActivity(launchIntent)
-            cloneRepository?.updateLaunchSuccess(instance.id)
 
             EngineExecutionResult.Success(
                 data = Unit,
-                message = "Launching ${instance.customName} in Mirro Container..."
+                message = "Opening ${instance.customName} in Mirro Container..."
             )
         } catch (e: Throwable) {
             EngineExecutionResult.Failure(

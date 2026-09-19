@@ -100,10 +100,17 @@ Mirro uses an isolated user-space sandbox architecture (`ContainerCloneEngine`):
 
 1. **APK & DEX Inspection (`ApkInspector`)**: Reads APK descriptors, split APK paths, native ABIs, and component declarations.
 2. **Filesystem Partitioning (`VirtualFileSystem`)**: Generates private sandboxes under `files/virtual/<clone_id>/` for data, databases, shared_prefs, cache, and code_cache.
-3. **Context Redirection (`VirtualContext`)**: Intercepts and redirects storage operations to the clone's dedicated directory.
-4. **Multi-Process WebView Isolation**: Assigns unique suffixes (`WebView.setDataDirectorySuffix("mirro_<clone_id>")`) to isolate cookies and browser sessions.
-5. **Shortcut Trampoline (`MirroLaunchTrampolineActivity`)**: Transparent trampoline that routes pinned home-screen shortcuts into the container runtime.
-6. **Developer Mode**: Advanced diagnostic inspectors and sandbox tools are cleanly gated in Settings behind a Developer Mode toggle.
+3. **Context Redirection (`VirtualContext`)**: Intercepts and redirects storage operations to the clone's dedicated directory with sanitized `ApplicationInfo` (dataDir mapped to sandbox root).
+4. **Multi-Stage Application Bootstrap (`ApplicationBootstrapper`)**: Orchestrates structured lifecycle progression with full exception unwrapping:
+   - `APPLICATION_CLASS_RESOLVED`: Resolves custom Application class with target ClassLoader.
+   - `APPLICATION_CONSTRUCTOR_FOUND`: Locates and accesses the no-arg constructor.
+   - `APPLICATION_INSTANCE_CREATED`: Instantiates target Application instance.
+   - `BASE_CONTEXT_ATTACHED`: Attaches `VirtualContext` via `attachBaseContext` reflection.
+   - `APPLICATION_ONCREATE_STARTED`: Sets thread context ClassLoader and calls `onCreate()`.
+   - `APPLICATION_ONCREATE_COMPLETED`: Verifies clean initialization before marking clone as active.
+5. **Multi-Process WebView Isolation**: Assigns unique suffixes (`WebView.setDataDirectorySuffix("mirro_<clone_id>")`) to isolate cookies and browser sessions.
+6. **Shortcut Trampoline (`MirroLaunchTrampolineActivity`)**: Transparent trampoline that routes pinned home-screen shortcuts into the container runtime.
+7. **Developer Mode**: Advanced diagnostic inspectors, failing stage telemetry, and root-cause traces are cleanly gated behind Developer Mode.
 
 ---
 

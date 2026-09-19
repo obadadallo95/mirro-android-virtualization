@@ -9,7 +9,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,12 +30,9 @@ import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -62,10 +58,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import app.mirro.android.data.local.AppDatabase
 import app.mirro.android.domain.engine.container.model.ContainerLaunchResult
 import app.mirro.android.domain.engine.container.model.ContainerRuntimeDiagnostics
 import app.mirro.android.domain.engine.container.runtime.ContainerRuntime
 import app.mirro.android.ui.theme.MirroTheme
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * Android Host Activity that boots, hosts, and monitors target application code
@@ -96,7 +96,18 @@ class ContainerHostActivity : ComponentActivity() {
         val badgeSymbol = intent.getStringExtra(EXTRA_BADGE_SYMBOL) ?: "2"
 
         val launchResult = if (cloneId.isNotEmpty() && packageName.isNotEmpty()) {
-            containerRuntime.prepareContainer(cloneId, packageName)
+            val res = containerRuntime.prepareContainer(cloneId, packageName)
+            if (res.isSuccess) {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    try {
+                        val db = AppDatabase.getInstance(applicationContext)
+                        db.cloneInstanceDao().updateLastLaunched(cloneId, System.currentTimeMillis())
+                    } catch (_: Exception) {
+                        // ignore persistence errors during test environments
+                    }
+                }
+            }
+            res
         } else {
             null
         }
@@ -111,7 +122,17 @@ class ContainerHostActivity : ComponentActivity() {
                     badgeSymbol = badgeSymbol,
                     initialResult = launchResult,
                     onReload = {
-                        containerRuntime.prepareContainer(cloneId, packageName)
+                        val res = containerRuntime.prepareContainer(cloneId, packageName)
+                        if (res.isSuccess) {
+                            lifecycleScope.launch(Dispatchers.IO) {
+                                try {
+                                    val db = AppDatabase.getInstance(applicationContext)
+                                    db.cloneInstanceDao().updateLastLaunched(cloneId, System.currentTimeMillis())
+                                } catch (_: Exception) {
+                                }
+                            }
+                        }
+                        res
                     },
                     onBack = { finish() },
                     onCopyLogs = { text ->
@@ -235,13 +256,17 @@ fun ContainerHostScreen(
                     Spacer(modifier = Modifier.width(14.dp))
                     Column {
                         Text(
-                            text = if (isSuccess) "Container Runtime Active" else "Startup Stoppage Detected",
+                            text = if (isSuccess) "Container Runtime Active" else "Couldn't start this clone",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
                         )
                         Text(
-                            text = result?.message ?: "Container initialized.",
+                            text = if (isSuccess) {
+                                result?.message ?: "Container initialized."
+                            } else {
+                                "The clone environment encountered an initialization error."
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = if (isSuccess) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -326,6 +351,16 @@ fun ContainerHostScreen(
                                     appendLine("APK Path: ${diag?.apkPath}")
                                     appendLine("Splits: ${diag?.splitCount}")
                                     appendLine("Main Activity: ${diag?.mainActivity}")
+                                    appendLine("Bootstrap Stage: ${diag?.bootstrapStage}")
+                                    if (diag?.failedStage != null) {
+                                        appendLine("Failed Stage: ${diag.failedStage}")
+                                    }
+                                    if (diag?.exceptionClass != null) {
+                                        appendLine("Exception: ${diag.exceptionClass}: ${diag.exceptionMessage}")
+                                    }
+                                    if (diag?.rootCauseClass != null) {
+                                        appendLine("Root Cause: ${diag.rootCauseClass}: ${diag.rootCauseMessage}")
+                                    }
                                     appendLine("Classloader: ${diag?.classloaderResult}")
                                     appendLine("Resources: ${diag?.resourcesResult}")
                                     appendLine("Application: ${diag?.applicationInitResult}")
@@ -345,6 +380,13 @@ fun ContainerHostScreen(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    ContainerInfoRow("Bootstrap Stage", "${diag?.bootstrapStage ?: "N/A"}")
+                    if (diag?.failedStage != null) {
+                        ContainerInfoRow("Failed Stage", "${diag.failedStage}")
+                    }
+                    if (diag?.rootCauseClass != null) {
+                        ContainerInfoRow("Root Cause", "${diag.rootCauseClass.substringAfterLast('.')}: ${diag.rootCauseMessage}")
+                    }
                     ContainerInfoRow("ClassLoader", diag?.classloaderResult ?: "N/A")
                     ContainerInfoRow("Resources Asset", diag?.resourcesResult ?: "N/A")
                     ContainerInfoRow("Application Life", diag?.applicationInitResult ?: "N/A")
@@ -444,3 +486,4 @@ private fun ContainerInfoRow(label: String, value: String) {
         )
     }
 }
+

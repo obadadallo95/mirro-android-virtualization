@@ -1,17 +1,23 @@
 package app.mirro.android.domain.engine.container.context
 
+import android.app.Application
+import android.content.ContentResolver
 import android.content.Context
 import android.content.ContextWrapper
 import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.res.AssetManager
+import android.content.res.Configuration
 import android.content.res.Resources
+import android.os.Build
+import android.os.Looper
 import app.mirro.android.domain.engine.container.loader.LoadedApkRuntime
 import app.mirro.android.domain.engine.container.model.VirtualRuntimeIdentity
 import app.mirro.android.domain.engine.container.proxy.ServiceProxyRegistry
 import app.mirro.android.domain.engine.container.proxy.VirtualPackageManager
 import java.io.File
+import java.util.concurrent.Executor
 
 /**
  * Virtualized ContextWrapper that redirects all app-facing file, database,
@@ -24,9 +30,22 @@ class VirtualContext(
     val serviceProxyRegistry: ServiceProxyRegistry = ServiceProxyRegistry(base)
 ) : ContextWrapper(base) {
 
-    val virtualPackageManager = VirtualPackageManager(base.packageManager, runtime.descriptor)
+    @Volatile
+    var targetApplication: Application? = null
+
+    val virtualPackageManager = VirtualPackageManager(
+        hostPackageManager = base.packageManager,
+        descriptor = runtime.descriptor,
+        identity = identity
+    )
+
+    override fun getApplicationContext(): Context {
+        return targetApplication ?: this
+    }
 
     override fun getPackageName(): String = identity.originalPackageName
+
+    override fun getOpPackageName(): String = identity.originalPackageName
 
     override fun getPackageCodePath(): String = runtime.descriptor.baseApkPath
 
@@ -50,6 +69,22 @@ class VirtualContext(
 
     override fun getAssets(): AssetManager {
         return runtime.resources.assets
+    }
+
+    override fun getMainLooper(): Looper {
+        return baseContext.mainLooper
+    }
+
+    override fun getMainExecutor(): Executor {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            baseContext.mainExecutor
+        } else {
+            Executor { command -> android.os.Handler(baseContext.mainLooper).post(command) }
+        }
+    }
+
+    override fun getContentResolver(): ContentResolver {
+        return baseContext.contentResolver
     }
 
     override fun getFilesDir(): File {
@@ -84,7 +119,6 @@ class VirtualContext(
     }
 
     override fun getSharedPreferences(name: String, mode: Int): SharedPreferences {
-        // Namespace SharedPreferences per clone ID to guarantee isolation
         val isolatedName = "mirro_${identity.cloneId}_$name"
         return baseContext.getSharedPreferences(isolatedName, mode)
     }
@@ -106,4 +140,24 @@ class VirtualContext(
         if (!isolated.exists()) isolated.mkdirs()
         return isolated
     }
+
+    override fun createPackageContext(packageName: String, flags: Int): Context {
+        if (packageName == identity.originalPackageName) {
+            return this
+        }
+        return baseContext.createPackageContext(packageName, flags)
+    }
+
+    override fun createConfigurationContext(overrideConfiguration: Configuration): Context {
+        val newBase = baseContext.createConfigurationContext(overrideConfiguration)
+        return VirtualContext(
+            base = newBase,
+            identity = identity,
+            runtime = runtime,
+            serviceProxyRegistry = serviceProxyRegistry
+        ).also {
+            it.targetApplication = this.targetApplication
+        }
+    }
 }
+
