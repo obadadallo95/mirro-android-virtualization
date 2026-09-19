@@ -386,6 +386,15 @@ class ContainerRuntime(
 
     fun getLatestDiagnostics(cloneId: String): ContainerRuntimeDiagnostics? = diagnosticLogs[cloneId]
 
+    fun recordAuthRouting(cloneId: String, routing: String) {
+        val current = diagnosticLogs[cloneId] ?: return
+        val updated = current.copy(
+            authRoutingResult = routing,
+            logs = current.logs + "${System.currentTimeMillis()}: Auth routing: $routing"
+        )
+        diagnosticLogs[cloneId] = updated
+    }
+
     /**
      * Records the first milestone that is visible to the user: the target Activity was attached
      * and resumed inside the host. Application.onCreate() alone is intentionally not treated as

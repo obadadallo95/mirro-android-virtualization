@@ -25,7 +25,8 @@ import java.lang.reflect.Method
  */
 class TargetActivityHost(
     private val hostActivity: Activity,
-    private val runtime: ContainerRuntime.ActiveContainerInstance
+    private val runtime: ContainerRuntime.ActiveContainerInstance,
+    private val onAuthRoutingObserved: (String) -> Unit = {}
 ) {
 
     /**
@@ -52,10 +53,14 @@ class TargetActivityHost(
     }
 
     private val authSessionRegistry by lazy {
-        TargetAuthSessionRegistry()
+        TargetAuthSessionRegistry(hostActivity)
     }
 
     private var targetActivity: Activity? = null
+
+    init {
+        ContainerAuthCallbackRouter.register(runtime.identity.cloneId, this)
+    }
 
     fun start(): kotlin.Result<Activity> {
         val descriptor = runtime.loadedRuntime.descriptor
@@ -89,7 +94,18 @@ class TargetActivityHost(
                 return null
             }
             if (requestCode >= 0) {
-                authSessionRegistry.remember(requestCode, intent)
+                authSessionRegistry.remember(
+                    cloneId = runtime.identity.cloneId,
+                    targetActivityClassName = target.javaClass.name,
+                    requestCode = requestCode,
+                    intent = intent
+                )?.let { session ->
+                    val routing = "cloneId=${session.cloneId}, " +
+                        "activity=${session.targetActivityClassName}, requestCode=${session.requestCode}, " +
+                        "callback=${session.callback?.describe() ?: "unknown"}"
+                    onAuthRoutingObserved(routing)
+                    Log.i(TAG, "Auth route captured: $routing")
+                }
             }
             return runCatching {
                 invokeDelegateStartActivity(
@@ -102,7 +118,9 @@ class TargetActivityHost(
                     options = options
                 )
             }.onFailure {
-                if (requestCode >= 0) authSessionRegistry.forget(requestCode)
+                if (requestCode >= 0) {
+                    authSessionRegistry.forget(requestCode, runtime.identity.cloneId)
+                }
             }.getOrThrow()
         }
 
@@ -205,11 +223,12 @@ class TargetActivityHost(
      * Activity so WebAuthenticationActivity can consume its OAuth callback.
      */
     fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (!authSessionRegistry.consumeActivityResult(requestCode, data)) {
+        val session = authSessionRegistry.consumeActivityResult(runtime.identity.cloneId, requestCode, data)
+        if (session == null) {
             Log.w(TAG, "Rejected untracked or mismatched Activity result: requestCode=$requestCode")
             return
         }
-        targetActivity?.let { activity ->
+        targetActivity?.takeIf { it.javaClass.name == session.targetActivityClassName }?.let { activity ->
             val callback = Activity::class.java.getDeclaredMethod(
                 "onActivityResult",
                 Int::class.javaPrimitiveType,
@@ -222,7 +241,24 @@ class TargetActivityHost(
                 "Forwarded Activity result to ${activity.javaClass.name}: " +
                     "requestCode=$requestCode resultCode=$resultCode hasData=${data != null}"
             )
+        } ?: Log.w(TAG, "Rejected Activity result: auth owner is no longer active")
+    }
+
+    internal fun handleExternalCallback(intent: Intent): Boolean {
+        val session = authSessionRegistry.consumeNewIntent(runtime.identity.cloneId, intent) ?: run {
+            Log.w(TAG, "Rejected untracked or mismatched external auth callback")
+            return false
         }
+        val activity = targetActivity?.takeIf {
+            it.javaClass.name == session.targetActivityClassName
+        } ?: run {
+            Log.w(TAG, "Rejected external auth callback: auth owner is no longer active")
+            return false
+        }
+        fieldValue<Instrumentation>(hostActivity, "mInstrumentation")
+            .callActivityOnNewIntent(activity, intent)
+        Log.i(TAG, "Forwarded external auth callback to ${activity.javaClass.name}")
+        return true
     }
 
     /**
@@ -230,15 +266,7 @@ class TargetActivityHost(
      * The host owns the system ActivityRecord, so forward that callback to the target instance.
      */
     fun onNewIntent(intent: Intent) {
-        if (!authSessionRegistry.consumeNewIntent(intent)) {
-            Log.w(TAG, "Rejected untracked new-intent callback")
-            return
-        }
-        targetActivity?.let { activity ->
-            fieldValue<Instrumentation>(hostActivity, "mInstrumentation")
-                .callActivityOnNewIntent(activity, intent)
-            Log.i(TAG, "Forwarded new intent to ${activity.javaClass.name}: hasData=${intent.data != null}")
-        }
+        handleExternalCallback(intent)
     }
 
     fun stop() {
@@ -253,6 +281,7 @@ class TargetActivityHost(
         }
         targetActivity = null
         authSessionRegistry.clear()
+        ContainerAuthCallbackRouter.unregister(runtime.identity.cloneId, this)
         runtime.virtualContext.targetProviders.asReversed().forEach { provider ->
             runCatching { provider.shutdown() }
                 .onFailure { error -> Log.w(TAG, "Target provider shutdown failed", error) }

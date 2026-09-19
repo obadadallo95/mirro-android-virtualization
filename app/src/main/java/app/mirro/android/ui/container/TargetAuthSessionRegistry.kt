@@ -1,91 +1,181 @@
 package app.mirro.android.ui.container
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Base64
+import java.nio.charset.StandardCharsets
 
 /**
- * Local, in-memory routing state for browser/credential callbacks belonging to one target
- * Activity host. No authorization code, token, cookie, or URL query is retained.
+ * Process-level callback coordinator for browser auth launched by a virtual target.
+ * Only routing metadata is retained; OAuth secrets are never persisted or logged.
  */
-internal class TargetAuthSessionRegistry {
+internal class TargetAuthSessionRegistry(
+    context: Context? = null,
+    private val clock: () -> Long = { System.currentTimeMillis() }
+) {
+    companion object {
+        const val SESSION_TIMEOUT_MS = 10 * 60 * 1000L
+        private const val PREFS_NAME = "mirro_auth_routing"
+        private const val RECORD_PREFIX = "session_"
+        private const val SEPARATOR = "\u001f"
+    }
 
-    private data class CallbackIdentity(
-        val scheme: String?,
-        val host: String?,
-        val path: String?
+    internal data class CallbackIdentity(
+        val scheme: String?, val host: String?, val path: String?
     ) {
         fun matches(uri: Uri): Boolean =
-            scheme == uri.scheme &&
-                host == uri.host &&
-                path == uri.path
+            scheme == uri.scheme && host == uri.host && path == uri.path
+
+        fun describe(): String =
+            "scheme=${scheme ?: "<none>"}, host=${host ?: "<none>"}, path=${path ?: "<none>"}"
     }
 
-    private data class PendingRequest(
-        val callback: CallbackIdentity?
+    internal data class PendingSession(
+        val cloneId: String,
+        val targetActivityClassName: String,
+        val requestCode: Int,
+        val callback: CallbackIdentity?,
+        val createdAt: Long
     )
 
-    private val pendingRequests = mutableMapOf<Int, PendingRequest>()
+    private val preferences = context?.applicationContext
+        ?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    private val pendingRequests = mutableMapOf<String, PendingSession>()
 
+    init {
+        restorePersistedSessions()
+        purgeExpired()
+    }
+
+    @Synchronized
+    fun remember(
+        cloneId: String,
+        targetActivityClassName: String,
+        requestCode: Int,
+        intent: Intent
+    ): PendingSession? {
+        if (cloneId.isBlank() || targetActivityClassName.isBlank() || requestCode < 0) return null
+        purgeExpired()
+        val session = PendingSession(
+            cloneId, targetActivityClassName, requestCode,
+            extractCallbackIdentity(intent), clock()
+        )
+        pendingRequests[key(session)] = session
+        persist(session)
+        return session
+    }
+
+    /** Compatibility overload retained for focused unit tests and older callers. */
     @Synchronized
     fun remember(requestCode: Int, intent: Intent) {
-        if (requestCode < 0) return
-        pendingRequests[requestCode] = PendingRequest(
-            callback = intent.data
-                ?.getQueryParameter("redirect_uri")
-                ?.let(Uri::parse)
-                ?.let { uri -> callbackIdentity(uri) }
-        )
+        remember("test", "unknown", requestCode, intent)
     }
 
     @Synchronized
-    fun forget(requestCode: Int) {
-        pendingRequests.remove(requestCode)
+    fun forget(requestCode: Int, cloneId: String? = null) {
+        pendingRequests.values.filter {
+            it.requestCode == requestCode && (cloneId == null || it.cloneId == cloneId)
+        }.forEach(::remove)
     }
 
-    /**
-     * Returns true only for a request that was initiated by the target Activity host. A null
-     * result is a normal user cancellation and is therefore allowed. For OAuth results, a
-     * non-null URI must match the redirect identity captured when the browser was launched.
-     */
     @Synchronized
-    fun consumeActivityResult(requestCode: Int, data: Intent?): Boolean {
-        val request = pendingRequests[requestCode] ?: return false
-        val callback = request.callback
+    fun consumeActivityResult(cloneId: String, requestCode: Int, data: Intent?): PendingSession? {
+        purgeExpired()
+        val session = pendingRequests.values.firstOrNull {
+            it.cloneId == cloneId && it.requestCode == requestCode
+        } ?: return null
         val resultUri = data?.data
-        if (callback == null || resultUri == null) {
-            pendingRequests.remove(requestCode)
-            return true
-        }
-        if (!callback.matches(resultUri)) return false
-        pendingRequests.remove(requestCode)
-        return true
+        if (resultUri != null && session.callback?.matches(resultUri) != true) return null
+        remove(session)
+        return session
     }
 
-    /**
-     * Consumes a new-intent callback only when it matches one of the pending OAuth redirects.
-     */
+    /** Compatibility overload retained for the existing registry unit tests. */
     @Synchronized
-    fun consumeNewIntent(intent: Intent): Boolean {
-        val resultUri = intent.data ?: return false
-        val matchingRequestCode = pendingRequests.entries.firstOrNull { (_, request) ->
-            request.callback?.matches(resultUri) == true
-        }?.key ?: return false
-        pendingRequests.remove(matchingRequestCode)
-        return true
+    fun consumeActivityResult(requestCode: Int, data: Intent?): Boolean =
+        consumeActivityResult("test", requestCode, data) != null
+
+    @Synchronized
+    fun consumeNewIntent(intent: Intent): PendingSession? {
+        return consumeNewIntent(null, intent)
+    }
+
+    @Synchronized
+    fun consumeNewIntent(cloneId: String?, intent: Intent): PendingSession? {
+        purgeExpired()
+        val resultUri = intent.data ?: return null
+        val session = pendingRequests.values.firstOrNull {
+            (cloneId == null || it.cloneId == cloneId) && it.callback?.matches(resultUri) == true
+        } ?: return null
+        remove(session)
+        return session
+    }
+
+    @Synchronized
+    fun pendingDiagnostics(): List<String> {
+        purgeExpired()
+        return pendingRequests.values.sortedBy { it.createdAt }.map {
+            "cloneId=${it.cloneId}, activity=${it.targetActivityClassName}, " +
+                "requestCode=${it.requestCode}, callback=${it.callback?.describe() ?: "unknown"}, " +
+                "ageMs=${(clock() - it.createdAt).coerceAtLeast(0L)}"
+        }
     }
 
     @Synchronized
     fun clear() {
-        pendingRequests.clear()
+        pendingRequests.values.toList().forEach(::remove)
+        preferences?.edit()?.clear()?.apply()
     }
 
-    private fun callbackIdentity(uri: Uri): CallbackIdentity {
-        // Only the non-secret routing identity is retained. The scheme, host, and path must match
-        // exactly what the target requested; query parameters are intentionally discarded.
-        return CallbackIdentity(
-            scheme = uri.scheme,
-            host = uri.host,
-            path = uri.path
-        )
+    private fun extractCallbackIdentity(intent: Intent): CallbackIdentity? =
+        intent.data?.getQueryParameter("redirect_uri")?.let(Uri::parse)?.let {
+            CallbackIdentity(it.scheme, it.host, it.path)
+        }
+
+    private fun purgeExpired() {
+        pendingRequests.values.filter { clock() - it.createdAt >= SESSION_TIMEOUT_MS }
+            .forEach(::remove)
     }
+
+    private fun key(session: PendingSession): String = "${session.cloneId}:${session.requestCode}"
+
+    private fun remove(session: PendingSession) {
+        pendingRequests.remove(key(session))
+        preferences?.edit()?.remove(RECORD_PREFIX + encode(key(session)))?.apply()
+    }
+
+    private fun persist(session: PendingSession) {
+        val callback = session.callback
+        val value = listOf(
+            session.cloneId, session.targetActivityClassName, session.requestCode.toString(),
+            callback?.scheme.orEmpty(), callback?.host.orEmpty(), callback?.path.orEmpty(),
+            session.createdAt.toString()
+        ).joinToString(SEPARATOR)
+        preferences?.edit()?.putString(RECORD_PREFIX + encode(key(session)), value)?.apply()
+    }
+
+    private fun restorePersistedSessions() {
+        preferences?.all?.forEach { (name, raw) ->
+            if (!name.startsWith(RECORD_PREFIX) || raw !is String) return@forEach
+            val fields = raw.split(SEPARATOR)
+            if (fields.size != 7) return@forEach
+            val session = runCatching {
+                val scheme = fields[3].ifBlank { null }
+                val host = fields[4].ifBlank { null }
+                val path = fields[5].ifBlank { null }
+                PendingSession(
+                    fields[0], fields[1], fields[2].toInt(),
+                    if (scheme == null && host == null && path == null) null
+                    else CallbackIdentity(scheme, host, path),
+                    fields[6].toLong()
+                )
+            }.getOrNull() ?: return@forEach
+            pendingRequests[key(session)] = session
+        }
+    }
+
+    private fun encode(value: String): String = Base64.encodeToString(
+        value.toByteArray(StandardCharsets.UTF_8), Base64.URL_SAFE or Base64.NO_WRAP
+    )
 }

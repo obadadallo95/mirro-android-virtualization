@@ -50,6 +50,26 @@
             android:theme="@style/Theme.MyApplication"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Narrow custom-scheme receiver for the observed ChatGPT callback. The coordinator
+             still rejects callbacks unless a matching local auth session exists. -->
+        <activity
+            android:name=".ui.container.MirroAuthCallbackActivity"
+            android:exported="true"
+            android:process=":container"
+            android:noHistory="true"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="com.openai.chatgpt"
+                    android:host="auth.openai.com"
+                    android:path="/android/com.openai.chatgpt/callback" />
+            </intent-filter>
+        </activity>
+
         <!-- Trampoline for pinned clone desktop shortcuts -->
         <activity
             android:name=".ui.trampoline.MirroLaunchTrampolineActivity"

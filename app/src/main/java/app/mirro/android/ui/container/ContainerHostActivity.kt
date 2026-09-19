@@ -125,7 +125,9 @@ class ContainerHostActivity : ComponentActivity() {
         var targetActivityStarted = false
         if (launchResult?.isBootstrapSuccess == true) {
             containerRuntime.activeInstance(cloneId)?.let { active ->
-                val host = TargetActivityHost(this, active)
+                val host = TargetActivityHost(this, active) { routing ->
+                    containerRuntime.recordAuthRouting(cloneId, routing)
+                }
                 val hostResult = host.start()
                 if (hostResult.isSuccess) {
                     targetActivityHost = host
@@ -420,6 +422,7 @@ fun ContainerHostScreen(
                                     appendLine("Resources: ${diag?.resourcesResult}")
                                     appendLine("Application: ${diag?.applicationInitResult}")
                                     appendLine("WebView Suffix: ${diag?.webViewSuffixResult}")
+                                    appendLine("Auth Routing: ${diag?.authRoutingResult ?: "NOT_OBSERVED"}")
                                     appendLine("Logs:")
                                     diag?.logs?.forEach { appendLine(" - $it") }
                                     if (diag?.errorStackTrace != null) {
@@ -445,6 +448,7 @@ fun ContainerHostScreen(
                     ContainerInfoRow("ClassLoader", diag?.classloaderResult ?: "N/A")
                     ContainerInfoRow("Resources Asset", diag?.resourcesResult ?: "N/A")
                     ContainerInfoRow("Application Life", diag?.applicationInitResult ?: "N/A")
+                    ContainerInfoRow("Auth Callback Routing", diag?.authRoutingResult ?: "Not observed")
 
                     if (diag?.errorStackTrace != null) {
                         Spacer(modifier = Modifier.height(8.dp))
