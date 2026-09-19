@@ -16,6 +16,8 @@
     <string name="close">إغلاق</string>
     <string name="options">خيارات</string>
     <string name="cancel">إلغاء</string>
+    <string name="ok">حسناً</string>
+    <string name="dismiss">تجاهل</string>
     <string name="save">حفظ</string>
     <string name="delete">حذف</string>
     <string name="edit">تعديل</string>
@@ -215,10 +217,14 @@
     <string name="compat_status_limited">محدود</string>
     <string name="compat_status_protected">محمي / مقيد</string>
     <string name="compat_status_unknown">غير معروف / يحتاج اختبار</string>
+    <string name="compat_status_work_profile_available">متوفر في الملف الشخصي</string>
+    <string name="compat_status_work_profile_install_required">يتطلب التثبيت في مساحة Mirro</string>
     <string name="compat_desc_supported">تطبيق أندرويد قياسي بدون علامات حظر افتراضية أو قيود أمنية على مستوى العتاد.</string>
     <string name="compat_desc_limited">يعتمد التطبيق على خدمات Google Play أو إشعارات الدفع التي قد تواجه قيوداً جزئية في بيئات العزل.</string>
     <string name="compat_desc_protected">يحتوي التطبيق على إدارة أجهزة، أو فحص سلامة Play، أو قيود خاصة من الشركة المصنعة تمنع الاستنساخ المستقل.</string>
     <string name="compat_desc_unknown">هيكل حزمة لم يتم تحليله مسبقاً. سيتم التحقق من التوافقية أثناء مرحلة العزل.</string>
+    <string name="compat_desc_work_profile_available">تم التحقق من وجود حزمة التطبيق داخل مساحة Mirro. جاهز لتكوين الحساب الثاني.</string>
+    <string name="compat_desc_work_profile_install_required">يجب إضافة أو تثبيت التطبيق في مساحة Mirro قبل تفعيل النسخة الثانية.</string>
 
     <string name="engine_title_work_profile">الملف الشخصي للعمل بنظام أندرويد</string>
     <string name="engine_desc_work_profile">يستخدم أساسيات عزل الملفات الشخصية في نظام أندرويد لتوفير مساحات عمل محمية عتادياً ومفصولة رسمياً.</string>
@@ -286,6 +292,52 @@
     <string name="settings_version_label">الإصدار</string>
     <string name="settings_version_value">١.٠.٠ (المرحلة الأولى)</string>
     <string name="settings_license_info">مفتوح المصدر ومتوافق مع سياسات Google Play</string>
+    <!-- =================================================================== -->
+    <!-- SECTION 15: MIRRO SPACE / WORK PROFILE PROVISIONING                 -->
+    <!-- =================================================================== -->
+    <string name="space_title">مساحة Mirro</string>
+    <string name="space_setup_title">إنشاء مساحة Mirro</string>
+    <string name="space_setup_desc">يستخدم Mirro نظام عزل الملفات الشخصية المدمج في أندرويد لإنشاء مساحة مستقلة لحسابات تطبيقاتك الثانية.</string>
+    <string name="space_action_create">إنشاء مساحة Mirro</string>
+    <string name="space_status_unavailable">مساحة Mirro غير مدعومة على هذا الجهاز</string>
+    <string name="space_status_ready">جاهز لإنشاء المساحة</string>
+    <string name="space_status_provisioning">جارٍ إنشاء مساحة Mirro…</string>
+    <string name="space_status_active">مساحة Mirro نشطة</string>
+    <string name="space_status_conflict">تم اكتشاف ملف شخصي للعمل مسبقاً</string>
+    <string name="space_status_conflict_desc">يوجد بالفعل ملف شخصي للعمل مدار من قِبل مؤسسة أخرى على هذا الجهاز.</string>
+    <string name="space_status_failed">فشل الإعداد</string>
+    <string name="space_card_profile_owner_badge">مالك الملف الشخصي</string>
+    <string name="space_card_active_desc">الملف الشخصي للعمل نشط ومحمي بنظام العزل والتشفير العتادي لأندرويد.</string>
+    <string name="space_card_available_desc">اضغط لإنشاء مساحة معزولة باستخدام واجهة الإعداد الأصلية لنظام أندرويد.</string>
+    <string name="space_card_not_supported_desc">لا تدعم نسخة النظام أو عتاد الجهاز ميزة إدارة المستخدمين والملفات الشخصية.</string>
+    <string name="space_disclaimer_system_consent">سيعرض نظام أندرويد شاشة الموافقة الرسمية لتأكيد إنشاء الملف الشخصي المعزول.</string>
+    <string name="space_app_status_not_ready">مساحة Mirro غير جاهزة</string>
+    <string name="space_app_status_not_installed">%1$s غير مثبت في مساحة Mirro بعد</string>
+    <string name="space_app_status_available">%1$s متوفر في مساحة Mirro</string>
+    <string name="space_app_action_add">إضافة %1$s إلى مساحة Mirro</string>
+    <string name="space_app_install_guide">قم بتثبيت %1$s في مساحة Mirro للمتابعة.</string>
+    <string name="space_app_ready_to_create">جاهز لإنشاء النسخة الثانية</string>
+    <string name="space_app_verified_badge">تم التحقق في الملف الشخصي</string>
+    <string name="space_app_direct_install">تفعيل في مساحة Mirro</string>
+    <string name="space_app_play_store">فتح في متجر Play المخصص للعمل</string>
+
+    <string name="compat_status_verified_work_profile">تم التحقق في مساحة Mirro</string>
+    <string name="compat_desc_verified_work_profile">تم تأكيد عزل التشغيل بنجاح مع جلسة وبيانات مستقلة تماماً.</string>
+
+    <string name="details_meta_runtime_state">حالة بيئة التشغيل</string>
+    <string name="details_meta_profile">بيئة الملف الشخصي</string>
+    <string name="details_runtime_verified">تم التحقق من التشغيل</string>
+    <string name="details_runtime_available">متاح</string>
+    <string name="details_runtime_paused">متوقف مؤقتاً (الوضع الهادئ)</string>
+    <string name="details_runtime_missing">غير متوفر بالملف الشخصي</string>
+    <string name="details_freeze_unsupported_title">التحكم في الملف الشخصي</string>
+    <string name="details_freeze_unsupported_desc">تقيد حماية نظام أندرويد الإيقاف البرمجي المباشر. يرجى استخدام زر \'ملف العمل\' في الإعدادات السريعة لإيقاف أو استئناف مساحة Mirro.</string>
+    <string name="trampoline_clone_not_found">لم يتم العثور على نسخة التطبيق</string>
+    <string name="launch_error_paused">مساحة Mirro متوقفة مؤقتاً. يرجى تفعيل ملف العمل من شريط الإعدادات السريعة.</string>
+    <string name="launch_error_not_installed">التطبيق غير مثبت داخل مساحة Mirro.</string>
+    <string name="launch_error_no_activity">لم يتم العثور على واجهة تشغيل رئيسية داخل مساحة Mirro.</string>
+    <string name="launch_error_blocked">تم حظر التشغيل عبر الملفات الشخصية بواسطة سياسات أمان النظام.</string>
+
     <string name="error_generic">حدث خطأ غير متوقع</string>
     <string name="error_package_not_found">تعذر العثور على حزمة التطبيق على هذا الجهاز</string>
     <string name="error_shortcut_failed">تعذر تثبيت الاختصار على مشغل التطبيقات الحالي</string>

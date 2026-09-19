@@ -44,6 +44,9 @@ fun CompatibilityChip(
         CompatibilityStatus.SUPPORTED -> Triple(R.string.compat_status_supported, StatusSupported, Icons.Default.CheckCircle)
         CompatibilityStatus.LIMITED -> Triple(R.string.compat_status_limited, StatusLimited, Icons.Default.Info)
         CompatibilityStatus.PROTECTED -> Triple(R.string.compat_status_protected, StatusProtected, Icons.Default.Lock)
+        CompatibilityStatus.WORK_PROFILE_AVAILABLE -> Triple(R.string.compat_status_work_profile_available, StatusSupported, Icons.Default.CheckCircle)
+        CompatibilityStatus.WORK_PROFILE_INSTALL_REQUIRED -> Triple(R.string.compat_status_work_profile_install_required, StatusLimited, Icons.Default.Info)
+        CompatibilityStatus.VERIFIED_WORK_PROFILE -> Triple(R.string.compat_status_verified_work_profile, StatusSupported, Icons.Default.CheckCircle)
         CompatibilityStatus.UNKNOWN -> Triple(R.string.compat_status_unknown, StatusUnknown, Icons.AutoMirrored.Filled.Help)
     }
 

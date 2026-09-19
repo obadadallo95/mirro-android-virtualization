@@ -28,6 +28,18 @@ enum class CompatibilityStatus(
         labelRes = R.string.compat_status_protected,
         descRes = R.string.compat_desc_protected
     ),
+    WORK_PROFILE_AVAILABLE(
+        labelRes = R.string.compat_status_work_profile_available,
+        descRes = R.string.compat_desc_work_profile_available
+    ),
+    WORK_PROFILE_INSTALL_REQUIRED(
+        labelRes = R.string.compat_status_work_profile_install_required,
+        descRes = R.string.compat_desc_work_profile_install_required
+    ),
+    VERIFIED_WORK_PROFILE(
+        labelRes = R.string.compat_status_verified_work_profile,
+        descRes = R.string.compat_desc_verified_work_profile
+    ),
     UNKNOWN(
         labelRes = R.string.compat_status_unknown,
         descRes = R.string.compat_desc_unknown
@@ -38,6 +50,9 @@ enum class CompatibilityStatus(
             SUPPORTED -> "Supported"
             LIMITED -> "Limited"
             PROTECTED -> "Protected"
+            WORK_PROFILE_AVAILABLE -> "Work Profile Ready"
+            WORK_PROFILE_INSTALL_REQUIRED -> "Install Required"
+            VERIFIED_WORK_PROFILE -> "Verified in Work Profile"
             UNKNOWN -> "Unknown"
         }
 }

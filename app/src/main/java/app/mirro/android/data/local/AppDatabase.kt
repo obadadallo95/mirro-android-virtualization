@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import app.mirro.android.data.local.dao.CloneInstanceDao
 import app.mirro.android.data.local.entity.CloneInstanceEntity
 
-@Database(entities = [CloneInstanceEntity::class], version = 1, exportSchema = false)
+@Database(entities = [CloneInstanceEntity::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun cloneInstanceDao(): CloneInstanceDao
 

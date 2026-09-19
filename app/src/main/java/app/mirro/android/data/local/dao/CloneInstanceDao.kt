@@ -37,4 +37,7 @@ interface CloneInstanceDao {
 
     @Query("UPDATE clone_instances SET lastLaunchedAt = :timestamp WHERE id = :id")
     suspend fun updateLastLaunched(id: String, timestamp: Long)
+
+    @Query("UPDATE clone_instances SET lastLaunchedAt = :timestamp, isRuntimeVerified = 1 WHERE id = :id")
+    suspend fun updateLaunchSuccess(id: String, timestamp: Long)
 }

@@ -2,6 +2,8 @@ package app.mirro.android.ui
 
 import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.LocalActivityResultRegistryOwner
+import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -32,6 +34,8 @@ import app.mirro.android.domain.analyzer.CompatibilityAnalyzer
 import app.mirro.android.domain.engine.EngineRegistry
 import app.mirro.android.domain.engine.blueprint.BlueprintCloneEngine
 import app.mirro.android.domain.engine.container.ContainerCloneEngine
+import app.mirro.android.domain.engine.workprofile.ProfileAppDiscoveryManager
+import app.mirro.android.domain.engine.workprofile.ProfileProvisioningManager
 import app.mirro.android.domain.engine.workprofile.WorkProfileCloneEngine
 import app.mirro.android.domain.model.CloneEngineType
 import app.mirro.android.ui.details.CloneDetailsScreen
@@ -61,6 +65,9 @@ fun MirroApp() {
     val shortcutRepo = remember { ShortcutRepository(context) }
     val settingsRepo = remember { SettingsRepository(context) }
 
+    val provisioningManager = remember { ProfileProvisioningManager(context) }
+    val appDiscoveryManager = remember { ProfileAppDiscoveryManager(context, provisioningManager) }
+
     val blueprintEngine = remember {
         BlueprintCloneEngine(
             context = context,
@@ -69,7 +76,14 @@ fun MirroApp() {
             shortcutRepository = shortcutRepo
         )
     }
-    val workProfileEngine = remember { WorkProfileCloneEngine(context) }
+    val workProfileEngine = remember {
+        WorkProfileCloneEngine(
+            context = context,
+            provisioningManager = provisioningManager,
+            appDiscoveryManager = appDiscoveryManager,
+            cloneRepository = cloneRepo
+        )
+    }
     val containerEngine = remember { ContainerCloneEngine() }
 
     val engineRegistry = remember {
@@ -84,7 +98,8 @@ fun MirroApp() {
             context = context,
             cloneRepository = cloneRepo,
             settingsRepository = settingsRepo,
-            engine = blueprintEngine
+            engineRegistry = engineRegistry,
+            provisioningManager = provisioningManager
         )
     }
 
@@ -144,11 +159,18 @@ fun MirroApp() {
         context.createConfigurationContext(localizedConfig)
     }
 
-    CompositionLocalProvider(
-        LocalConfiguration provides localizedConfig,
-        LocalContext provides localizedContext,
-        LocalLayoutDirection provides layoutDirection
-    ) {
+    val activityResultOwner = LocalActivityResultRegistryOwner.current ?: (context as? ActivityResultRegistryOwner)
+
+    val locals = buildList {
+        add(LocalConfiguration provides localizedConfig)
+        add(LocalContext provides localizedContext)
+        add(LocalLayoutDirection provides layoutDirection)
+        if (activityResultOwner != null) {
+            add(LocalActivityResultRegistryOwner provides activityResultOwner)
+        }
+    }
+
+    CompositionLocalProvider(*locals.toTypedArray()) {
         MirroTheme(
             darkTheme = isDarkTheme,
             dynamicColor = userSettings.dynamicColor
@@ -183,6 +205,7 @@ fun MirroApp() {
                                     packageName = screen.packageName,
                                     installedAppRepository = installedAppRepo,
                                     engineRegistry = engineRegistry,
+                                    workProfileEngine = workProfileEngine,
                                     analyzer = analyzer
                                 )
                             }
@@ -208,8 +231,9 @@ fun MirroApp() {
                                     context = context,
                                     cloneRepository = cloneRepo,
                                     installedAppRepository = installedAppRepo,
-                                    engine = blueprintEngine,
-                                    analyzer = analyzer
+                                    engineRegistry = engineRegistry,
+                                    analyzer = analyzer,
+                                    discoveryManager = appDiscoveryManager
                                 )
                             }
                             CloneDetailsScreen(

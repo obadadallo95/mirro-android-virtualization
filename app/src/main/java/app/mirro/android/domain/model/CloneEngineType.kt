@@ -14,7 +14,7 @@ enum class CloneEngineType(
     WORK_PROFILE(
         titleRes = R.string.engine_title_work_profile,
         descRes = R.string.engine_desc_work_profile,
-        isImplemented = false
+        isImplemented = true
     ),
     VIRTUALIZED_CONTAINER(
         titleRes = R.string.engine_title_container,

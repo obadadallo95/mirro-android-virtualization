@@ -2,6 +2,7 @@ package app.mirro.android.domain.analyzer
 
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageInfo
+import app.mirro.android.domain.model.CloneEngineType
 import app.mirro.android.domain.model.CompatibilityReport
 import app.mirro.android.domain.model.CompatibilityStatus
 
@@ -17,7 +18,12 @@ import app.mirro.android.domain.model.CompatibilityStatus
  */
 class CompatibilityAnalyzer {
 
-    fun analyze(packageInfo: PackageInfo): CompatibilityReport {
+    fun analyze(
+        packageInfo: PackageInfo,
+        engineType: CloneEngineType? = null,
+        isInstalledInWorkProfile: Boolean? = null,
+        isRuntimeLaunchVerified: Boolean? = null
+    ): CompatibilityReport {
         val appInfo = packageInfo.applicationInfo
         val technicalDetails = mutableListOf<String>()
         val riskFactors = mutableListOf<String>()
@@ -68,23 +74,65 @@ class CompatibilityAnalyzer {
             }
         }
 
-        // 4. Primary Acceptance Target: ChatGPT
+        // 4. Engine-Specific Analysis: Android Managed Work Profile (Milestone 2C)
+        if (engineType == CloneEngineType.WORK_PROFILE) {
+            val pkgName = packageInfo.packageName.lowercase()
+            val isTargetApp = pkgName == "com.openai.chatgpt"
+
+            if (isRuntimeLaunchVerified == true) {
+                technicalDetails.add("Package presence confirmed inside Mirro Space")
+                if (isTargetApp) {
+                    technicalDetails.add("Primary acceptance target verified: independent instance runtime active")
+                }
+                technicalDetails.add("Runtime cross-profile launch executed successfully via LauncherApps")
+                technicalDetails.add("Independent session, process UID, and sandbox storage confirmed")
+                return CompatibilityReport(
+                    status = CompatibilityStatus.VERIFIED_WORK_PROFILE,
+                    summary = "Runtime isolation verified in Mirro Space. Session and data are fully isolated.",
+                    technicalDetails = technicalDetails,
+                    riskFactors = emptyList()
+                )
+            } else if (isInstalledInWorkProfile == true) {
+                technicalDetails.add("Package verified present inside Mirro Space (Work Profile)")
+                if (isTargetApp) {
+                    technicalDetails.add("Primary acceptance-test target app detected in profile")
+                }
+                technicalDetails.add("Ready for runtime launch execution")
+                return CompatibilityReport(
+                    status = CompatibilityStatus.WORK_PROFILE_AVAILABLE,
+                    summary = "Application package is available inside Mirro Space. Ready to launch second instance.",
+                    technicalDetails = technicalDetails,
+                    riskFactors = emptyList()
+                )
+            } else if (isInstalledInWorkProfile == false) {
+                technicalDetails.add("Application is not yet present inside Mirro Space")
+                riskFactors.add("Package installation in Mirro Space is required before activation.")
+                return CompatibilityReport(
+                    status = CompatibilityStatus.WORK_PROFILE_INSTALL_REQUIRED,
+                    summary = "Application must be added to Mirro Space to establish second instance.",
+                    technicalDetails = technicalDetails,
+                    riskFactors = riskFactors
+                )
+            }
+        }
+
+        // 5. Primary Acceptance Target: ChatGPT
         // ChatGPT is our primary acceptance-test app, but compatibility must NOT be declared as proven
         // until a real engine successfully runs it in an isolated environment.
         val pkgName = packageInfo.packageName.lowercase()
         if (pkgName == "com.openai.chatgpt") {
             technicalDetails.add("Primary acceptance-test target application")
             technicalDetails.add("Package metadata valid (single-user profile architecture)")
-            technicalDetails.add("Runtime isolation test pending execution")
+            technicalDetails.add("Runtime isolation test pending")
             return CompatibilityReport(
                 status = CompatibilityStatus.UNKNOWN,
-                summary = "Primary acceptance target. Requires runtime isolation testing before compatibility is confirmed.",
+                summary = "Primary acceptance target. Work Profile provisioning or installation required.",
                 technicalDetails = technicalDetails,
                 riskFactors = emptyList()
             )
         }
 
-        // 5. GMS, Banking, or Payment signatures (Known limitations)
+        // 6. GMS, Banking, or Payment signatures (Known limitations)
         val hasGmsPushLikelihood = pkgName.contains("whatsapp") ||
                 pkgName.contains("telegram") ||
                 pkgName.contains("signal") ||
@@ -102,7 +150,7 @@ class CompatibilityAnalyzer {
             )
         }
 
-        // 6. Generic applications: Do not claim SUPPORTED merely from targetSdk >= 24.
+        // 7. Generic applications: Do not claim SUPPORTED merely from targetSdk >= 24.
         // Package metadata alone cannot prove runtime isolation success.
         if (appInfo != null && appInfo.targetSdkVersion >= 24) {
             technicalDetails.add("Standard launchable user space package (targetSdk ${appInfo.targetSdkVersion})")

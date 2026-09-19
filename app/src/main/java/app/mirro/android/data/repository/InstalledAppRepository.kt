@@ -3,6 +3,7 @@ package app.mirro.android.data.repository
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import app.mirro.android.domain.analyzer.CompatibilityAnalyzer
@@ -29,6 +30,19 @@ class InstalledAppRepository(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: Flow<Boolean> = _isLoading.asStateFlow()
+
+    fun getPackageInfo(packageName: String): PackageInfo? {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                packageManager.getPackageInfo(packageName, PackageManager.PackageInfoFlags.of(0L))
+            } else {
+                @Suppress("DEPRECATION")
+                packageManager.getPackageInfo(packageName, 0)
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
 
     suspend fun refreshInstalledApps() = withContext(Dispatchers.IO) {
         _isLoading.value = true

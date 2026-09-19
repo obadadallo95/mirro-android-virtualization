@@ -14,8 +14,8 @@ import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
 import android.os.Build
-import app.mirro.android.MainActivity
 import app.mirro.android.domain.model.CloneInstance
+import app.mirro.android.ui.trampoline.MirroLaunchTrampolineActivity
 
 /**
  * Pinned launcher shortcut manager for clone instances.
@@ -37,7 +37,7 @@ class ShortcutRepository(
             val shortcutManager = context.getSystemService(ShortcutManager::class.java) ?: return false
             if (!shortcutManager.isRequestPinShortcutSupported) return false
 
-            val launchIntent = Intent(context, MainActivity::class.java).apply {
+            val launchIntent = Intent(context, MirroLaunchTrampolineActivity::class.java).apply {
                 action = Intent.ACTION_VIEW
                 putExtra("EXTRA_CLONE_ID", instance.id)
                 putExtra("EXTRA_PACKAGE_NAME", instance.originalPackageName)

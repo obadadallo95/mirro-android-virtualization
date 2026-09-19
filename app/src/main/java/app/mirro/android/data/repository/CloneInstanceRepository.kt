@@ -43,4 +43,8 @@ class CloneInstanceRepository(
     suspend fun updateLastLaunched(id: String, timestamp: Long = System.currentTimeMillis()) {
         cloneInstanceDao.updateLastLaunched(id, timestamp)
     }
+
+    suspend fun updateLaunchSuccess(id: String, timestamp: Long = System.currentTimeMillis()) {
+        cloneInstanceDao.updateLaunchSuccess(id, timestamp)
+    }
 }

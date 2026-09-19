@@ -133,7 +133,26 @@ fun CloneDetailsScreen(
         )
     }
 
-    // Launch Disclaimer Dialog (Honest technical explanation)
+    // Freeze Notice Dialog (Honest platform explanation)
+    if (uiState.showFreezeNoticeDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissFreezeNotice() },
+            title = { Text(stringResource(R.string.details_freeze_unsupported_title)) },
+            text = {
+                Text(
+                    text = uiState.freezeNoticeMessage ?: stringResource(R.string.details_freeze_unsupported_desc),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(onClick = { viewModel.dismissFreezeNotice() }) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
+        )
+    }
+
+    // Launch Disclaimer Dialog (Honest technical explanation for Blueprint)
     if (uiState.showLaunchDisclaimer) {
         AlertDialog(
             onDismissRequest = { viewModel.dismissLaunchDisclaimer() },
@@ -285,7 +304,11 @@ fun CloneDetailsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Button(
-                        onClick = { viewModel.requestLaunch() },
+                        onClick = {
+                            viewModel.requestLaunch { msg ->
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         shape = RoundedCornerShape(12.dp),
                         modifier = Modifier
                             .weight(1.3f)
@@ -395,7 +418,7 @@ fun CloneDetailsScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Profile Metadata Card
+                // Profile & Compatibility Metadata Card
                 Card(
                     shape = RoundedCornerShape(18.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -416,19 +439,44 @@ fun CloneDetailsScreen(
 
                         val dateFormat = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault())
                         val createdDateStr = dateFormat.format(Date(instance.createdAt))
+                        val lastLaunchedStr = instance.lastLaunchedAt?.let { dateFormat.format(Date(it)) } ?: "Never"
 
                         MetadataRow(
                             label = stringResource(R.string.details_meta_package),
                             value = instance.originalPackageName
                         )
                         MetadataRow(
-                            label = stringResource(R.string.details_meta_created),
-                            value = createdDateStr
-                        )
-                        MetadataRow(
                             label = stringResource(R.string.details_meta_engine),
                             value = stringResource(instance.engineType.titleRes)
                         )
+                        MetadataRow(
+                            label = stringResource(R.string.details_meta_profile),
+                            value = instance.profileType.name
+                        )
+                        MetadataRow(
+                            label = stringResource(R.string.details_meta_runtime_state),
+                            value = if (instance.isRuntimeVerified) stringResource(R.string.details_runtime_verified) else stringResource(R.string.details_runtime_available)
+                        )
+                        MetadataRow(
+                            label = "Last Launched",
+                            value = lastLaunchedStr
+                        )
+                        MetadataRow(
+                            label = stringResource(R.string.details_meta_created),
+                            value = createdDateStr
+                        )
+
+                        val compatReport = uiState.compatibilityReport
+                        if (compatReport != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Compatibility Report",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            CompatibilityChip(status = compatReport.status)
+                        }
                     }
                 }
 

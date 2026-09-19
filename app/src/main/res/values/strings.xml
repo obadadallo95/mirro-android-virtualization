@@ -16,6 +16,8 @@
     <string name="close">Close</string>
     <string name="options">Options</string>
     <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="dismiss">Dismiss</string>
     <string name="save">Save</string>
     <string name="delete">Delete</string>
     <string name="edit">Edit</string>
@@ -215,10 +217,14 @@
     <string name="compat_status_limited">Limited</string>
     <string name="compat_status_protected">Protected / Restricted</string>
     <string name="compat_status_unknown">Unknown / Needs Testing</string>
+    <string name="compat_status_work_profile_available">Work Profile Available</string>
+    <string name="compat_status_work_profile_install_required">Install Required in Mirro Space</string>
     <string name="compat_desc_supported">Standard Android application with no known anti-virtualization flags or strict hardware keystore lockouts.</string>
     <string name="compat_desc_limited">Application uses features such as Google Play Services dependencies, push notifications, or custom content providers that may have partial isolation limitations.</string>
     <string name="compat_desc_protected">Application includes device administrator, Play Integrity hardware attestation, or vendor security restrictions that prevent standalone virtualization.</string>
     <string name="compat_desc_unknown">Unanalyzed package structure. Compatibility will be verified during isolation testing.</string>
+    <string name="compat_desc_work_profile_available">Application package is detected and verified inside Mirro Space. Ready for second account configuration.</string>
+    <string name="compat_desc_work_profile_install_required">Application must be added to Mirro Space before activating the second instance.</string>
 
     <string name="engine_title_work_profile">Android Managed Work Profile</string>
     <string name="engine_desc_work_profile">Uses Android OS multi-user / work profile isolation primitives. Provides hardware-backed sandbox boundaries and official system separation.</string>
@@ -286,6 +292,52 @@
     <string name="settings_version_label">Version</string>
     <string name="settings_version_value">1.0.0 (Alpha Milestone 1)</string>
     <string name="settings_license_info">Open Source &amp; Google Play Policy Compliant</string>
+    <!-- =================================================================== -->
+    <!-- SECTION 15: MIRRO SPACE / WORK PROFILE PROVISIONING                 -->
+    <!-- =================================================================== -->
+    <string name="space_title">Mirro Space</string>
+    <string name="space_setup_title">Create Mirro Space</string>
+    <string name="space_setup_desc">Mirro uses Android\'s built-in profile isolation to create a separate space for your second app accounts.</string>
+    <string name="space_action_create">Create Mirro Space</string>
+    <string name="space_status_unavailable">Mirro Space unavailable on this device</string>
+    <string name="space_status_ready">Ready to create</string>
+    <string name="space_status_provisioning">Creating Mirro Space…</string>
+    <string name="space_status_active">Mirro Space active</string>
+    <string name="space_status_conflict">Existing work profile detected</string>
+    <string name="space_status_conflict_desc">An existing managed work profile from another enterprise or manager is already present on this device.</string>
+    <string name="space_status_failed">Setup failed</string>
+    <string name="space_card_profile_owner_badge">Profile Owner</string>
+    <string name="space_card_active_desc">Your isolated work profile is active and secured by hardware sandbox encryption.</string>
+    <string name="space_card_available_desc">Tap to provision an isolated profile space using Android\'s native system setup.</string>
+    <string name="space_card_not_supported_desc">This device build or ROM lacks multi-user / managed profile support.</string>
+    <string name="space_disclaimer_system_consent">Android will display a standard system confirmation screen to set up your isolated work profile.</string>
+    <string name="space_app_status_not_ready">Mirro Space is not ready</string>
+    <string name="space_app_status_not_installed">%1$s is not yet installed in Mirro Space</string>
+    <string name="space_app_status_available">%1$s is available in Mirro Space</string>
+    <string name="space_app_action_add">Add %1$s to Mirro Space</string>
+    <string name="space_app_install_guide">Install %1$s in Mirro Space to continue.</string>
+    <string name="space_app_ready_to_create">Ready to create second instance</string>
+    <string name="space_app_verified_badge">Verified in Profile</string>
+    <string name="space_app_direct_install">Enable in Mirro Space</string>
+    <string name="space_app_play_store">Open in Work Play Store</string>
+
+    <string name="compat_status_verified_work_profile">Verified in Mirro Space</string>
+    <string name="compat_desc_verified_work_profile">Runtime isolation confirmed with independent data and session.</string>
+
+    <string name="details_meta_runtime_state">Runtime State</string>
+    <string name="details_meta_profile">Profile Sandbox</string>
+    <string name="details_runtime_verified">Launch Verified</string>
+    <string name="details_runtime_available">Available</string>
+    <string name="details_runtime_paused">Paused (Quiet Mode)</string>
+    <string name="details_runtime_missing">Missing in Profile</string>
+    <string name="details_freeze_unsupported_title">Work Profile Control</string>
+    <string name="details_freeze_unsupported_desc">Direct programmatic pausing is restricted by Android security. Use the native \'Work Profile\' toggle in your device Quick Settings to pause or resume Mirro Space.</string>
+    <string name="trampoline_clone_not_found">Clone instance not found</string>
+    <string name="launch_error_paused">Mirro Space is paused. Please unpause your work profile from Quick Settings.</string>
+    <string name="launch_error_not_installed">Application is not installed inside Mirro Space.</string>
+    <string name="launch_error_no_activity">No launchable main activity found in Mirro Space.</string>
+    <string name="launch_error_blocked">Cross-profile launch blocked by platform security policy.</string>
+
     <string name="error_generic">An unexpected error occurred</string>
     <string name="error_package_not_found">Application package could not be found on this device</string>
     <string name="error_shortcut_failed">Unable to pin shortcut on this launcher</string>

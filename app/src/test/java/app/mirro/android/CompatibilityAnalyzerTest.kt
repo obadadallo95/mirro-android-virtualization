@@ -88,4 +88,46 @@ class CompatibilityAnalyzerTest {
         assertEquals(CompatibilityStatus.UNKNOWN, report.status)
         assertTrue(report.technicalDetails.any { it.contains("Requires runtime test") })
     }
+
+    @Test
+    fun `work profile app with verified runtime launch evaluates as VERIFIED_WORK_PROFILE`() {
+        val packageInfo = PackageInfo().apply {
+            packageName = "com.openai.chatgpt"
+            applicationInfo = ApplicationInfo().apply {
+                flags = ApplicationInfo.FLAG_ALLOW_BACKUP
+                targetSdkVersion = 34
+            }
+        }
+
+        val report = analyzer.analyze(
+            packageInfo = packageInfo,
+            engineType = app.mirro.android.domain.model.CloneEngineType.WORK_PROFILE,
+            isInstalledInWorkProfile = true,
+            isRuntimeLaunchVerified = true
+        )
+
+        assertEquals(CompatibilityStatus.VERIFIED_WORK_PROFILE, report.status)
+        assertTrue(report.technicalDetails.any { it.contains("Runtime cross-profile launch executed successfully") })
+        assertTrue(report.technicalDetails.any { it.contains("Independent session") })
+    }
+
+    @Test
+    fun `work profile app installed but not yet launched evaluates as WORK_PROFILE_AVAILABLE`() {
+        val packageInfo = PackageInfo().apply {
+            packageName = "com.openai.chatgpt"
+            applicationInfo = ApplicationInfo().apply {
+                flags = ApplicationInfo.FLAG_ALLOW_BACKUP
+                targetSdkVersion = 34
+            }
+        }
+
+        val report = analyzer.analyze(
+            packageInfo = packageInfo,
+            engineType = app.mirro.android.domain.model.CloneEngineType.WORK_PROFILE,
+            isInstalledInWorkProfile = true,
+            isRuntimeLaunchVerified = false
+        )
+
+        assertEquals(CompatibilityStatus.WORK_PROFILE_AVAILABLE, report.status)
+    }
 }

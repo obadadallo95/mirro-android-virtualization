@@ -11,11 +11,14 @@ data class CloneInstance(
     val badgeColorHex: String,
     val badgeSymbol: String,
     val engineType: CloneEngineType,
+    val profileType: ProfileType = ProfileType.MIRRO_MANAGED,
+    val userSerialNumber: Long = 0L,
     val isFrozen: Boolean = false,
     val isLocked: Boolean = false,
     val storageSizeBytes: Long = 0L,
     val createdAt: Long = System.currentTimeMillis(),
-    val lastLaunchedAt: Long? = null
+    val lastLaunchedAt: Long? = null,
+    val isRuntimeVerified: Boolean = false
 )
 
 /**
@@ -28,5 +31,7 @@ data class CloneConfig(
     val badgeColorHex: String,
     val badgeSymbol: String,
     val engineType: CloneEngineType,
+    val profileType: ProfileType = ProfileType.MIRRO_MANAGED,
+    val userSerialNumber: Long = 0L,
     val isLocked: Boolean = false
 )
