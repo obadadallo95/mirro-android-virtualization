@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- =================================================================== -->
+    <!-- SECTION 1: CORE APPLICATION & BRAND IDENTITY                         -->
+    <!-- =================================================================== -->
+    <string name="app_name">Mirro</string>
+    <string name="app_tagline">Same apps. More possibilities.</string>
+    <string name="app_version_label">Version</string>
+    <string name="app_version_value">1.0.0 (Alpha Milestone 1)</string>
+    <string name="app_description">Privacy-first, advertisement-free Android application cloning and multi-account workspace.</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 2: COMMON ACTIONS & CONTROLS                                -->
+    <!-- =================================================================== -->
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+    <string name="options">Options</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="delete">Delete</string>
+    <string name="edit">Edit</string>
+    <string name="confirm">Confirm</string>
+    <string name="retry">Retry</string>
+    <string name="refresh">Refresh</string>
+    <string name="copy">Copy</string>
+    <string name="share">Share</string>
+    <string name="search">Search</string>
+    <string name="loading">Loading…</string>
+    <string name="done">Done</string>
+    <string name="apply">Apply</string>
+    <string name="reset">Reset</string>
+    <string name="select_all">Select All</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 3: NAVIGATION LABELS                                        -->
+    <!-- =================================================================== -->
+    <string name="nav_home">Home</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_vault">Vault</string>
+    <string name="nav_storage">Storage</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 4: PRIMARY SCREEN — HOME                                    -->
+    <!-- =================================================================== -->
+    <string name="home_title">Mirro</string>
+    <string name="home_subtitle">Isolated instances • Zero tracking</string>
+    <string name="home_search_placeholder">Search clones…</string>
+    <string name="home_stats_active_clones">Clones Active</string>
+    <string name="home_stats_privacy">100% On-Device</string>
+    <string name="home_stats_no_ads">No Ads</string>
+    <string name="home_empty_title">No Clones Yet</string>
+    <string name="home_empty_desc">Run multiple accounts for ChatGPT, messaging, or productivity apps with isolated data and complete privacy.</string>
+    <string name="home_action_add">Clone an App</string>
+    <string name="home_clones_header">Your Clones</string>
+    <string name="home_view_grid">Grid View</string>
+    <string name="home_view_list">List View</string>
+    <string name="home_quick_launch_title">Quick Launch</string>
+    <string name="home_recent_clones">Recently Used</string>
+    <string name="home_filter_all">All Clones</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 5: PRIMARY SCREEN — APP PICKER                              -->
+    <!-- =================================================================== -->
+    <string name="picker_title">Select Application</string>
+    <string name="picker_search_placeholder">Search installed apps…</string>
+    <string name="picker_filter_all">All Apps</string>
+    <string name="picker_filter_user">User Apps</string>
+    <string name="picker_filter_system">System Apps</string>
+    <string name="picker_count_format">%1$d applications found</string>
+    <string name="picker_empty_search">No apps found matching “%1$s”</string>
+    <string name="picker_empty_apps">No applications available</string>
+    <string name="picker_refresh">Refresh Apps</string>
+    <string name="picker_select_hint">Select an installed application to configure a cloned instance</string>
+    <string name="picker_system_apps_warning">System apps may require elevated platform permissions for full container isolation</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 6: PRIMARY SCREEN — CLONE SETUP                             -->
+    <!-- =================================================================== -->
+    <string name="setup_title">Clone Setup</string>
+    <string name="setup_original_label">Source Application</string>
+    <string name="setup_name_label">Clone Display Name</string>
+    <string name="setup_name_hint">e.g. ChatGPT Work, Personal…</string>
+    <string name="setup_badge_color">Badge Color</string>
+    <string name="setup_badge_symbol">Badge Identifier</string>
+    <string name="setup_engine_strategy">Isolation Engine</string>
+    <string name="setup_lock_toggle">Require Biometric / Device Lock</string>
+    <string name="setup_lock_desc">Prompt for fingerprint or PIN before opening</string>
+    <string name="setup_button_create">Create Clone</string>
+    <string name="setup_preview">Live Preview</string>
+    <string name="setup_advanced_options">Advanced Isolation Settings</string>
+    <string name="setup_isolation_level">Isolation Level</string>
+    <string name="setup_data_storage_path">Storage Partition</string>
+    <string name="setup_custom_icon_label">Badge Customization</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 7: PRIMARY SCREEN — CLONE DETAILS                           -->
+    <!-- =================================================================== -->
+    <string name="details_title">Clone Details</string>
+    <string name="details_action_launch">Launch Instance</string>
+    <string name="details_action_freeze">Freeze Process</string>
+    <string name="details_action_unfreeze">Unfreeze Process</string>
+    <string name="details_action_shortcut">Add to Home</string>
+    <string name="details_action_rename">Rename</string>
+    <string name="details_action_delete">Delete Instance</string>
+    <string name="details_storage_header">Storage Metrics</string>
+    <string name="details_storage_app">Application APK</string>
+    <string name="details_storage_data">Isolated Data</string>
+    <string name="details_storage_cache">Cache &amp; Temp</string>
+    <string name="details_storage_total">Total Footprint</string>
+    <string name="details_meta_header">Profile Information</string>
+    <string name="details_meta_package">Source Package</string>
+    <string name="details_meta_created">Created On</string>
+    <string name="details_meta_engine">Engine Strategy</string>
+    <string name="details_meta_status">Current Status</string>
+    <string name="details_status_active">Ready</string>
+    <string name="details_status_frozen">Frozen / Suspended</string>
+    <string name="details_status_blueprint">Architecture Blueprint</string>
+    <string name="details_delete_confirm_title">Delete Clone Instance?</string>
+    <string name="details_delete_confirm_message">This will permanently delete this instance configuration and all associated isolated storage data. This action cannot be reversed.</string>
+    <string name="details_clear_cache_title">Clear Instance Cache</string>
+    <string name="details_clear_cache_desc">Remove temporary session files to reclaim storage space</string>
+    <string name="details_clear_data_title">Reset Instance Data</string>
+    <string name="details_clear_data_desc">Clear all logins and preferences without deleting the instance blueprint</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 8: PRIMARY SCREEN — SETTINGS                                -->
+    <!-- =================================================================== -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme_mode">Color Theme</string>
+    <string name="settings_theme_system">System Default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_dynamic_color">Dynamic Color (Material You)</string>
+    <string name="settings_dynamic_color_desc">Use colors derived from wallpaper on Android 12+</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_system">Auto (Follow System)</string>
+    <string name="settings_language_en">English</string>
+    <string name="settings_language_ar">العربية (Arabic)</string>
+    <string name="settings_security">Security &amp; Privacy</string>
+    <string name="settings_app_lock">Mirro Master Lock</string>
+    <string name="settings_app_lock_desc">Require biometric authentication to open Mirro</string>
+    <string name="settings_stealth_mode">Stealth Mode</string>
+    <string name="settings_stealth_mode_desc">Hide clone titles and preview screenshots from recent app switcher</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 9: PRODUCT PHILOSOPHY GUARANTEES                            -->
+    <!-- =================================================================== -->
+    <string name="settings_philosophy">Product Guarantees</string>
+    <string name="guarantee_free_title">100% Free Forever</string>
+    <string name="guarantee_free_desc">No subscriptions, paywalls, or artificial limits on how many clones you create.</string>
+    <string name="guarantee_no_ads_title">Zero Advertisements</string>
+    <string name="guarantee_no_ads_desc">No ad networks, banners, or interstitial popups. Pure utility.</string>
+    <string name="guarantee_no_tracking_title">No Telemetry or Tracking</string>
+    <string name="guarantee_no_tracking_desc">Zero analytics SDKs, user tracking, or crash identifiers sent to remote servers.</string>
+    <string name="guarantee_no_account_title">No Mandatory Accounts</string>
+    <string name="guarantee_no_account_desc">No sign-up required. Your app data never leaves your physical phone.</string>
+    <string name="guarantee_on_device_title">On-Device Privacy First</string>
+    <string name="guarantee_on_device_desc">All app cloning, storage statistics, and configurations are computed locally.</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 10: PRIMARY SCREEN — ARCHITECTURE & ENGINE DOCS            -->
+    <!-- =================================================================== -->
+    <string name="settings_architecture_title">Engine &amp; Technology</string>
+    <string name="settings_view_engine_spec">Cloning Engine Specifications</string>
+    <string name="settings_view_engine_spec_desc">Read details on Work Profile vs Container strategies</string>
+    <string name="arch_title">Engineering Architecture</string>
+    <string name="arch_subtitle">Platform constraints and technical strategy</string>
+    <string name="arch_overview_title">Core Architectural Strategy</string>
+    <string name="arch_overview_desc">Mirro decouples UI presentation from the cloning execution engine. Rather than using brittle hacks, Mirro embraces Android platform primitives with high technical fidelity.</string>
+    <string name="arch_strategy_work_profile_title">Strategy 1: Android Managed Work Profile</string>
+    <string name="arch_strategy_work_profile_desc">Utilizes Android OS multi-user architecture (DevicePolicyManager/UserManager). Provides hardware-isolated user spaces with independent keystores, encrypted data partitions, and native notification badges.</string>
+    <string name="arch_strategy_container_title">Strategy 2: Virtualized Container Sandbox</string>
+    <string name="arch_strategy_container_desc">User-space process virtualization hooks ActivityThread, PackageManager, and FileSystem redirects. Allows limitless clone instances per app without requiring Device Owner status.</string>
+    <string name="arch_strategy_blueprint_title">Strategy 3: Architectural Blueprint Staging</string>
+    <string name="arch_strategy_blueprint_desc">The active first milestone foundation. Safely tracks real installed packages, measures physical storage footprint, builds custom badges, and creates launcher shortcuts while deep process virtualization is staged.</string>
+    <string name="arch_constraints_title">Android Platform Security &amp; Limits</string>
+    <string name="arch_constraints_desc">Starting in Android 11+, Package Visibility rules require specific queries declarations. Furthermore, Play Integrity attestation and hardware keystores cannot and should not be subverted.</string>
+    <string name="arch_chatgpt_case_title">Primary Acceptance Test: ChatGPT</string>
+    <string name="arch_chatgpt_case_desc">Evaluates com.openai.chatgpt as fully compatible under isolated sandbox staging due to standard Android application architecture and standard local session tokens.</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 11: PRIMARY SCREEN — BRAND IDENTITY & DESIGN SYSTEM         -->
+    <!-- =================================================================== -->
+    <string name="settings_brand_identity_title">Brand Identity &amp; Design System</string>
+    <string name="settings_brand_identity_desc">Explore the Mirro logo concept, optical grid, colors, and typography</string>
+    <string name="brand_title">Mirro Brand Identity</string>
+    <string name="brand_subtitle">Brand Guidelines &amp; Design System</string>
+    <string name="brand_concept_title">1. Symbol Concept &amp; Anatomy</string>
+    <string name="brand_concept_subtitle">The Reflected M — Mirroring without Entanglement</string>
+    <string name="brand_concept_desc">The Mirro symbol synthesizes three ideas into a single glyph: a mirror\'s reflection line, the letter M, and two autonomous app spaces.</string>
+    <string name="brand_anatomy_01_title">The Optical Mirror Meridian</string>
+    <string name="brand_anatomy_01_desc">A central vertical axis of symmetry that acts as the mirror plane, creating an optical corridor down the center.</string>
+    <string name="brand_anatomy_02_title">The Letter M Geometry</string>
+    <string name="brand_anatomy_02_desc">Twin outer vertical pillars, dual rounded apexes, and inward diagonal facets naturally trace the letter M.</string>
+    <string name="brand_anatomy_03_title">Duplication with Separation</string>
+    <string name="brand_anatomy_03_desc">The left wing represents the Primary Host Instance (Cobalt #1E40AF). The right wing represents the Reflected Instance (Cyan #38BDF8).</string>
+    <string name="brand_anatomy_04_title">Non-Entanglement Micro-Gap</string>
+    <string name="brand_anatomy_04_desc">The two halves never touch across the mirror axis, communicating zero data entanglement between instances.</string>
+    <string name="brand_palette_title">3. Color Palette &amp; Functional Roles</string>
+    <string name="brand_palette_desc">The Reflective Spectrum — Restrained, Confident, Android-First</string>
+    <string name="brand_typography_title">4. Typography System</string>
+    <string name="brand_typography_desc">Clean modern neo-grotesque sans-serif pairings</string>
+    <string name="brand_splash_title">5. Splash Screen Concept</string>
+    <string name="brand_splash_desc">Android 12+ launch screen specification</string>
+    <string name="brand_splash_tap_preview">Tap to Preview Full Launch Screen</string>
+    <string name="brand_principles_title">6. Brand Principles &amp; Voice</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 12: COMPATIBILITY ANALYZER & CLONE ENGINES                  -->
+    <!-- =================================================================== -->
+    <string name="compat_title">Compatibility</string>
+    <string name="compat_status_supported">Supported</string>
+    <string name="compat_status_limited">Limited</string>
+    <string name="compat_status_protected">Protected / Restricted</string>
+    <string name="compat_status_unknown">Unknown / Needs Testing</string>
+    <string name="compat_desc_supported">Standard Android application with no known anti-virtualization flags or strict hardware keystore lockouts.</string>
+    <string name="compat_desc_limited">Application uses features such as Google Play Services dependencies, push notifications, or custom content providers that may have partial isolation limitations.</string>
+    <string name="compat_desc_protected">Application includes device administrator, Play Integrity hardware attestation, or vendor security restrictions that prevent standalone virtualization.</string>
+    <string name="compat_desc_unknown">Unanalyzed package structure. Compatibility will be verified during isolation testing.</string>
+
+    <string name="engine_title_work_profile">Android Managed Work Profile</string>
+    <string name="engine_desc_work_profile">Uses Android OS multi-user / work profile isolation primitives. Provides hardware-backed sandbox boundaries and official system separation.</string>
+    <string name="engine_title_container">Virtual Container Sandbox</string>
+    <string name="engine_desc_container">Runs isolated APK in an internal user-space sandbox hook engine without requiring device administrator or work profiles.</string>
+    <string name="engine_title_user_profile">Secondary User Account</string>
+    <string name="engine_desc_user_profile">Leverages Android multi-user manager (UserManager) for dedicated user spaces.</string>
+    <string name="engine_title_blueprint">Architecture Blueprint (Foundation Staging)</string>
+    <string name="engine_desc_blueprint">Real architectural configuration model. Manages clone blueprints, launcher shortcuts, and storage projections while engine virtualization is under construction.</string>
+
+    <string name="engine_dev_title">Real Engineering Notice</string>
+    <string name="engine_dev_badge">Under Construction</string>
+    <string name="engine_dev_message">Mirro is built with zero fake simulations. The underlying low-level Android process isolation engine (Work Profile / Containerized Sandbox) is currently in architectural staging.\n\nYour clone configuration can be registered as a valid Blueprint to test the UI, shortcut creation, and storage modeling.</string>
+    <string name="engine_action_save_blueprint">Save as Blueprint</string>
+    <string name="engine_action_view_architecture">Inspect Engine Docs</string>
+    <string name="engine_launch_disclaimer_title">Demonstration Launch</string>
+    <string name="engine_launch_disclaimer_desc">Since low-level sandboxing is not yet attached, Mirro can launch the base application for verification without pretending a separate container is running.</string>
+    <string name="engine_launch_proceed">Launch Base App</string>
+    <string name="status_ready">Ready</string>
+    <string name="status_under_construction">Under Construction</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 13: FUTURE PRIMARY SCREEN PLACEHOLDERS                      -->
+    <!-- =================================================================== -->
+    <!-- Privacy Vault Screen Placeholder -->
+    <string name="vault_title">Privacy Vault</string>
+    <string name="vault_subtitle">Secure and disguise sensitive cloned spaces</string>
+    <string name="vault_empty_title">No Hidden Clones</string>
+    <string name="vault_empty_desc">Move sensitive accounts here to hide them from the primary home screen.</string>
+    <string name="vault_action_hide">Hide in Vault</string>
+    <string name="vault_action_unhide">Unhide Instance</string>
+    <string name="vault_biometric_prompt">Authenticate to access Mirro Vault</string>
+
+    <!-- Storage Cleaner Screen Placeholder -->
+    <string name="storage_cleaner_title">Storage Optimizer</string>
+    <string name="storage_cleaner_desc">Inspect and clean isolated app caches across all instances</string>
+    <string name="storage_cleaner_action_scan">Scan Cache Footprint</string>
+    <string name="storage_cleaner_action_clean">Clean All Caches</string>
+    <string name="storage_cleaner_saved_format">Reclaimed %1$s of space</string>
+
+    <!-- Backup & Restore Placeholder -->
+    <string name="backup_title">Instance Backup</string>
+    <string name="backup_subtitle">Export and restore clone configurations locally</string>
+    <string name="backup_action_export">Export Blueprint JSON</string>
+    <string name="backup_action_import">Import Blueprint File</string>
+    <string name="backup_export_disclaimer">Backups contain instance metadata and configurations. Encrypted app tokens remain inside secure storage.</string>
+
+    <!-- Diagnostics & Engine Test Placeholder -->
+    <string name="diagnostics_title">Sandbox Diagnostics</string>
+    <string name="diagnostics_subtitle">Verify system isolation primitives and keystore access</string>
+    <string name="diagnostics_test_isolation">Process Isolation Check</string>
+    <string name="diagnostics_test_keystore">Hardware Keystore Access</string>
+    <string name="diagnostics_passed">Passed</string>
+    <string name="diagnostics_failed">Failed</string>
+
+    <!-- =================================================================== -->
+    <!-- SECTION 14: TOASTS, FEEDBACK & STATUS ALERTS                        -->
+    <!-- =================================================================== -->
+    <string name="shortcut_created">Shortcut added to home screen</string>
+    <string name="action_not_implemented">Engine capability currently in development</string>
+    <string name="status_frozen_toast">Instance marked as frozen</string>
+    <string name="status_unfrozen_toast">Instance marked as ready</string>
+    <string name="status_deleted_toast">Clone instance removed</string>
+    <string name="settings_about_title">About Mirro</string>
+    <string name="settings_version_label">Version</string>
+    <string name="settings_version_value">1.0.0 (Alpha Milestone 1)</string>
+    <string name="settings_license_info">Open Source &amp; Google Play Policy Compliant</string>
+    <string name="error_generic">An unexpected error occurred</string>
+    <string name="error_package_not_found">Application package could not be found on this device</string>
+    <string name="error_shortcut_failed">Unable to pin shortcut on this launcher</string>
+</resources>
