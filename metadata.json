@@ -1,6 +1,6 @@
 {
   "name": "Mirro",
-  "description": "Privacy-first Android multi-account and app cloning platform. One app. Two spaces.",
+  "description": "Mirro — Android app virtualization research prototype covering app cloning, dynamic loaders, Binder boundaries, native compatibility, and real-profile execution.",
   "requestFramePermissions": [],
   "majorCapabilities": []
 }

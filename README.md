@@ -1,147 +1,140 @@
 # Mirro
 
-**Mirro** is a modern, privacy-first Android application cloning and multi-account platform built natively with Kotlin, Jetpack Compose, and Material 3 / Material You.
+Mirro is an **Android app virtualization research project**. It explores Android app cloning, multi-account isolation, in-process containers, dynamic DEX loading, Binder/system-service boundaries, native runtime compatibility, GMS identity, and Android-owned profile execution.
 
-> **Tagline**: *Same apps. More possibilities.*  
-> **Application ID**: `app.mirro.android`  
-> **Namespace**: `app.mirro.android`
+> Active product development has concluded; the repository remains available as a research reference.
 
----
+## Status
 
-## 💎 Brand Identity & Visual Design System
+- Research prototype and archived active-development project.
+- Not production-ready.
+- Not a universal app cloner or a Parallel Space replacement.
+- No compatibility guarantee for arbitrary third-party apps.
+- No security-boundary bypasses are included or accepted.
 
-### 1. Conceptual Foundation
-The visual identity of **Mirro** is built on the convergence of three foundational ideas:
-1. **The Mirror / Reflection**: An optical plane across which an entity is replicated with absolute geometric fidelity.
-2. **The Letter M**: A natural typographic silhouette formed by twin grounded monoliths, peaked apexes, and descending diagonal chamfers.
-3. **Duplication with Separation**: Two equal, autonomous spaces operating side by side without data entanglement or leakage.
+The code is useful for studying Android app virtualization research, Android app cloning without root, virtual PackageManager/ActivityManager design, Binder interception boundaries, dynamic loaders, and profile-based cloning. Treat it as experimental code, not as a secure runtime for sensitive accounts or banking apps.
 
-```
-       [Primary Space]              [Reflected Space]
-       Royal Cobalt #1E40AF         Electric Azure #38BDF8
-             |                            |
-             v                            v
-          +-----+                      +-----+
-          |  /\ |                      | /\  |
-          | /  \|                      |/  \ |
-          |/    |                      |    \|
-          +-----+                      +-----+
-             |                            |
-             +--------[ 4dp Optical ]-----+
-                      [ Mirror Axis ]
-                      [ Separation  ]
-```
+## Why this project exists
 
-### 2. The Reflective Color Spectrum
-- **Mirro Cobalt Primary (`#1E40AF`)**: Grounded foundation, represents the original host instance, stability, and trust.
-- **Electric Reflection (`#38BDF8`)**: Radiant luminous cyan, represents the duplicate space, energy, and clarity.
-- **Cyan Mirror Accent (`#0284C7`)**: Interactive highlights, buttons, and state indicators.
-- **Obsidian Dark Canvas (`#090D16`)**: Deep, calm background providing high contrast for the reflective mark.
-- **Midnight Navy Surface (`#0F172A`)**: Raised card surfaces and elevated containers.
-- **Cool Slate (`#64748B`)**: Structural dividers, subtle optical frames, and secondary metadata.
-- **Ice Mist Canvas (`#F8FAFC`)**: Light mode canvas, soft on eyes, crisp off-white.
+The original product goal was a free, local, privacy-first Android multi-account experience: independent app sessions, no ads, no cloud runtime cost, and no root. The central question was whether a normal application could host popular social, messaging, native and GMS-dependent apps inside an isolated user-space container.
 
-### 3. Android Adaptive Launcher Icon & Splash Screen
-- **Safe Zone**: Foreground mark centered strictly within the central 66dp of the 108dp canvas (`ic_launcher_foreground.xml`).
-- **Background**: Multi-stop radial and linear gradient on obsidian navy (`ic_launcher_background.xml`).
-- **Splash Screen**: Fully compliant with Android 12+ SplashScreen API (`ic_mirro_splash_logo.xml` and `values-v31/themes.xml`), featuring specular emblem padding to avoid circular viewport clipping.
+## What was built
 
----
+The repository contains a Kotlin/Compose Android prototype with:
 
-## 🎯 Acceptance Criteria: Primary Real-World Use Case
+- APK and split inspection, target Application bootstrap and Activity hosting.
+- `MirroTargetClassLoader`, target class indexing and a dynamic loader graph.
+- Virtual `Context`, package/component registry, permissions and AppOps models.
+- Clone-isolated storage paths, preferences, databases and WebView process-slot handling.
+- Logical Activity/task, provider/FileProvider, service, broadcast, PendingIntent and notification models.
+- Capability classification and structured runtime diagnostics.
+- Deterministic unit tests for loader, package, storage, identity and component contracts.
+- A real Samsung profile proof showing Android-owned package/UID/process isolation.
 
-**Target**: Multi-account usage for **ChatGPT** (`com.openai.chatgpt`).
-1. Primary personal account operating on the host device.
-2. Isolated instance operating with independent tokens, local cache, and user sessions.
+## What actually worked
 
-### Technical Viability & Compatibility Evidence:
-- `com.openai.chatgpt` utilizes a standard single-user user-space architecture (no `sharedUserId`, no custom system daemon bindings).
-- Target SDK is current (Android 14+ / API 34+).
-- In accordance with our core engineering principles, compatibility is categorized as **UNKNOWN / Pending Runtime Test** until a live isolated execution engine successfully validates sandbox launch on real devices.
+| Path | Result |
+|---|---|
+| In-process ChatGPT | UI reaches the login/input surface; native/GMS identity remains blocked |
+| In-process Discord | Fails at native loading with missing `libkv_storage.so` |
+| In-process Facebook | Application starts, then fails with `DYNAMIC_LOADER_UNSEEN` |
+| In-process BA-mobil | Static/root Activity works; later GMS/Firebase identity and lifecycle boundaries fail |
+| Samsung real clone profile | ChatGPT runs under a profile-derived process/data boundary; Discord reaches its normal Welcome screen without the prior native-loader failure |
 
----
+The real-profile result is not a Mirro-created universal profile API. It demonstrates that Android itself can own the authority that the in-process container cannot truthfully emulate.
 
-## 🏛️ Clean Architecture & Package Structure
+## Key conclusion
 
-Mirro strictly decouples user interface components from local persistence and the container runtime:
+`Context.getPackageName()` is not Android identity. A facade does not change the Linux UID, Binder caller UID, signing certificate, AppOps attribution, system-service ownership, native linker namespace, or Play Integrity verdict.
 
-```
-app.mirro.android
-├── data
-│   ├── local
-│   │   ├── dao             # CloneInstanceDao (Room Flow queries)
-│   │   ├── entity          # CloneInstanceEntity (SQLite table)
-│   │   └── AppDatabase     # Room database instance ("mirro_database")
-│   └── repository          # InstalledAppRepository, CloneInstanceRepository,
-│                           # ShortcutRepository, SettingsRepository
-├── domain
-│   ├── analyzer            # CompatibilityAnalyzer (PackageInfo evaluation)
-│   ├── engine              # CloneEngine interface, EngineAvailability, EngineExecutionResult
-│   │   └── container       # ContainerCloneEngine (User-space virtual container)
-│   └── model               # InstalledApp, CloneInstance, CompatibilityStatus, StorageMetrics
-└── ui
-    ├── components          # AppIconWithBadge, CompatibilityChip, SearchField
-    ├── container           # ContainerHostActivity (Dedicated container runner)
-    ├── details             # CloneDetailsScreen & ViewModel
-    ├── home                # HomeScreen & ViewModel (Grid/List, live search, stats)
-    ├── navigation          # Type-safe Screen routes
-    ├── picker              # AppPickerScreen & ViewModel (app discovery)
-    ├── settings            # SettingsScreen & ContainerDiagnosticsScreen
-    ├── setup               # CloneSetupScreen & ViewModel (custom naming, badging preview)
-    ├── theme               # Material 3 Dynamic Color, Light/Dark palettes, Typography
-    └── trampoline          # MirroLaunchTrampolineActivity (Home-screen shortcut launcher)
+Broad compatibility requires a deep authority boundary around:
+
+1. Process/runtime and lifecycle ownership.
+2. Binder and system-service interception or replacement.
+3. Package/component/task authority.
+4. Native filesystem, linker, JNI and process-environment adaptation.
+5. Dynamic code/resource/loader integration.
+6. Isolation policy, scheduling and diagnostics.
+
+Mature VirtualApp/Parallel Space-style systems maintain this boundary across Android and OEM changes. Real Android profiles solve much of it because Android owns the package, UID, process, storage and services.
+
+## Architecture evolution
+
+```text
+Stage 1  APK inspection + Application bootstrap + Activity embedding
+Stage 2  Dynamic loader graph and runtime observability
+Stage 3  Virtual package/component/storage/framework contracts
+Stage 4  Real Samsung profile execution proof
+Stage 5  Final pivot: profile-aware orchestration, bounded local container
 ```
 
----
+### Current local container
 
-## ⚙️ Runtime Engine: Mirro Container
+```text
+Mirro host Activity
+  -> ContainerRuntime
+  -> target APK/split inspection
+  -> MirroTargetClassLoader + loader graph
+  -> VirtualContext and local framework models
+  -> target Application / Activity in Mirro process
+  -> host window, task, UID and Android system services
+```
 
-Mirro uses an isolated user-space sandbox architecture (`ContainerCloneEngine`):
+### Real-profile approach
 
-1. **APK & DEX Inspection (`ApkInspector`)**: Reads the base APK, split APK paths, native ABIs, and component declarations.
-2. **Filesystem Partitioning (`VirtualFileSystem`)**: Generates private sandboxes under `files/virtual/<clone_id>/` for data, databases, shared_prefs, cache, and code_cache.
-3. **Context Redirection (`VirtualContext`)**: Redirects storage operations to the clone's dedicated directory with virtual package identity and resources.
-4. **Target Class Loading (`MirroTargetClassLoader`)**: Indexes classes from the base APK and executable splits, keeps Android/platform and Mirro classes host-owned, and routes target-owned dependencies before host duplicates.
-5. **Multi-Stage Application Bootstrap (`ApplicationBootstrapper`)**: Orchestrates structured lifecycle progression with full exception unwrapping:
-   - `APPLICATION_CLASS_RESOLVED`: Resolves custom Application class with target ClassLoader.
-   - `APPLICATION_CONSTRUCTOR_FOUND`: Locates and accesses the no-arg constructor.
-   - `APPLICATION_INSTANCE_CREATED`: Instantiates target Application instance.
-   - `BASE_CONTEXT_ATTACHED`: Attaches `VirtualContext` via `attachBaseContext` reflection.
-   - `APPLICATION_ONCREATE_STARTED`: Sets thread context ClassLoader and calls `onCreate()`.
-   - `APPLICATION_ONCREATE_COMPLETED`: Verifies clean initialization before marking clone as active.
-6. **Dedicated Process Slot**: `ContainerHostActivity` runs in the `:container` process. One clone owns that process slot for its lifetime, so a process restart is required before another clone can use a different WebView suffix.
-7. **WebView Isolation**: Configures `WebView.setDataDirectorySuffix("mirro_<clone_id>")` once per dedicated process slot and fails closed on a suffix mismatch.
-8. **Current Phase Boundary**: This phase stops after reliable `Application.onCreate()` bootstrap. Activity hosting and `RUNTIME_VERIFIED` are not claimed yet.
-9. **Developer Mode**: Advanced diagnostic inspectors, failing-stage telemetry, class ownership traces, and root-cause stacks remain local to the device.
+```text
+Mirro launcher/orchestrator
+  -> user/OEM/profile setup
+  -> Android PackageManager for profile user
+  -> real target package/process/UID/data root
+  -> Android ActivityManager, Binder, native loader and system services
+```
 
-### Runtime state contract
+## Repository map
 
-Persisted clone states are `REGISTERED`, `APK_LOADED`, `APPLICATION_BOOTSTRAPPED`, `ACTIVITY_HOSTED`, `RUNTIME_VERIFIED`, and `FAILED`. Opening `ContainerHostActivity` or completing `Application.onCreate()` does not mark a clone verified. Failures retain their stage and root reason in Room.
+Start with [Project Overview](docs/00_PROJECT_OVERVIEW.md), then follow the [Research Index](docs/10_RESEARCH_INDEX.md).
 
----
+Core reports:
 
-## 🔍 Compatibility System
+- [Architecture History](docs/01_ARCHITECTURE_HISTORY.md)
+- [Compatibility Matrix](docs/COMPATIBILITY_MATRIX.md)
+- [Full Virtualization Architecture Audit](docs/FULL_VIRTUALIZATION_ARCHITECTURE_AUDIT.md)
+- [Dynamic Code Runtime](docs/DYNAMIC_CODE_RUNTIME.md)
+- [Virtual Framework Runtime](docs/VIRTUAL_FRAMEWORK_RUNTIME.md)
+- [Real Profile Architecture Proof](docs/REAL_PROFILE_ARCHITECTURE_PROOF.md)
+- [Final Virtualization Engine Decision](docs/FINAL_VIRTUALIZATION_ENGINE_DECISION.md)
+- [Lessons Learned](docs/09_LESSONS_LEARNED.md)
+- [Open Source License Review](docs/OPEN_SOURCE_LICENSE_REVIEW.md)
 
-Mirro never claims universal compatibility based on static metadata alone. Applications are analyzed directly against their declared package attributes:
+## Compatibility findings
 
-| Status | Definition | Example Scenarios |
-| :--- | :--- | :--- |
-| **SUPPORTED** | Confirmed compatible with user-space isolation. | Verified applications following live engine tests. |
-| **LIMITED** | Identified external push notifications (FCM) or hardware keystore dependencies. | Apps requiring strict hardware attestation. |
-| **PROTECTED** | System apps or shared Linux UIDs that cannot be isolated in the user-space container. | Carrier apps, Settings, privileged vendor packages. |
+The project uses evidence categories rather than a green “launch succeeded” claim. `STATIC_SUPPORTED`, `REGISTERED_DYNAMIC`, `DYNAMIC_LOADER_UNSEEN`, `NATIVE_LOAD_FAILED`, `SYSTEM_IDENTITY_BLOCKED`, and profile-mediated results describe what was actually observed.
 
+The primary blockers were not solved by adding another package facade:
 
----
+- GMS and Google login validate caller/package identity outside Mirro’s virtual metadata.
+- Native libraries observe the host process and linker environment.
+- Private or native-created loaders may never enter Mirro’s observable loader graph.
+- Activity embedding does not replace ActivityManager, task tokens or system lifecycle.
+- Background work, providers, notifications and PendingIntents remain Android-owned unless a real framework boundary exists.
 
-## 📊 Storage Metrics Policy
+## What future developers should know
 
-- Application APK size is measured directly from the filesystem (`ApplicationInfo.sourceDir`).
-- Isolated sandbox data and cache sizes are returned as `null` (Unavailable) or marked as estimated when isolated execution has not yet run.
-- Fabricated numbers (e.g. 42MB, 12MB) are strictly prohibited.
+- Package name is not real Android identity.
+- A `Context` facade is not Binder identity.
+- Retrying a class loader is not loader virtualization.
+- Java storage redirection is not native process isolation.
+- Activity embedding is not ActivityManager virtualization.
+- GMS, Play Integrity, DRM and hardware attestation cannot be solved by spoofing guest metadata.
+- A native hook layer can improve compatibility but creates an Android-version/OEM maintenance program.
+- Work Profile, Dual Apps and secondary users are Android-owned execution boundaries with unavoidable setup and UX constraints.
 
----
+## Ethical and security boundaries
 
-## 🌐 Internationalization & RTL
+Mirro does not bypass Play Integrity, forge signatures or UIDs, extract credentials/cookies/sessions, bypass DRM, defeat anti-tamper controls, or claim unsupported GMS identity. Do not use the prototype with sensitive accounts, financial apps or data you cannot afford to lose.
 
-- Full native localization for **English** (`values/strings.xml`) and **Arabic** (`values-ar/strings.xml`).
-- Arabic includes correct Right-to-Left (RTL) mirroring across all screens and components.
+## License and contribution
+
+Mirro-owned source and documentation are released under [Apache License 2.0](LICENSE), subject to the notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Referenced projects are not Mirro dependencies and are not relicensed by this repository.
+
+Documentation improvements, reproducibility reports and safe compatibility research are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).

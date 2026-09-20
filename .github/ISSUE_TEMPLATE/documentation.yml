@@ -1,0 +1,21 @@
+name: Documentation improvement
+description: Improve research clarity, links or reproducibility instructions.
+title: "[docs] "
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is unclear or incorrect?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested improvement
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, tokens, cookies, private logs, device serials or proprietary app data.

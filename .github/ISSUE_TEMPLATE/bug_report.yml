@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a reproducible prototype or documentation problem.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include credentials, tokens, cookies, account content, private APKs, device serials, or unsanitized logs.
+  - type: input
+    id: android
+    attributes:
+      label: Android version/API
+      placeholder: Android 16 / API 36
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: OEM/device
+      placeholder: Samsung model family; omit serial numbers
+    validations:
+      required: true
+  - type: input
+    id: target
+    attributes:
+      label: Target app/version
+      placeholder: Package and version, if applicable
+  - type: input
+    id: abi
+    attributes:
+      label: ABI
+      placeholder: arm64-v8a
+  - type: input
+    id: commit
+    attributes:
+      label: Mirro commit
+      placeholder: git SHA
+  - type: dropdown
+    id: path
+    attributes:
+      label: Execution path
+      options:
+        - Local in-process container
+        - Android/OEM profile
+        - Documentation/tooling
+    validations:
+      required: true
+  - type: input
+    id: category
+    attributes:
+      label: Failure category
+      placeholder: DYNAMIC_LOADER_UNSEEN, NATIVE_LOAD_FAILED, SYSTEM_IDENTITY_BLOCKED, etc.
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and sanitized logs
+    validations:
+      required: true

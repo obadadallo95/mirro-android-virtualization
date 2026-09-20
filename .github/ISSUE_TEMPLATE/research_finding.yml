@@ -1,0 +1,32 @@
+name: Research finding
+description: Share reproducible Android virtualization evidence.
+title: "[research] "
+labels: ["research"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share sanitized, reproducible evidence only. No credentials, tokens, cookies, private APKs, account data or device serials.
+  - type: textarea
+    id: question
+    attributes:
+      label: Research question
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Android/API, OEM/device family, ABI, Mirro commit and execution path.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and interpretation
+    validations:
+      required: true
+  - type: textarea
+    id: limitations
+    attributes:
+      label: Limits and reproducibility notes

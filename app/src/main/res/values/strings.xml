@@ -220,7 +220,7 @@
     <string name="compat_desc_container_verified">Application code executed successfully inside isolated container sandbox.</string>
 
     <string name="engine_title_container">Mirro Container (Recommended)</string>
-    <string name="engine_desc_container">Privacy-first, in-app user-space sandbox. Isolates clone files, databases, preferences, cookies, and WebView data without Android-managed profiles.</string>
+    <string name="engine_desc_container">Research container for studying clone files, databases, preferences, cookies, WebView data, and Android identity boundaries.</string>
 
     <string name="engine_dev_title">Real Engineering Notice</string>
     <string name="engine_dev_badge">Under Construction</string>
