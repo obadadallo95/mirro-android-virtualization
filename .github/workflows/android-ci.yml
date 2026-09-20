@@ -27,6 +27,9 @@ jobs:
       - name: Install Android SDK components
         run: sdkmanager "platforms;android-36" "platforms;android-36.1" "build-tools;36.1.0"
 
+      - name: Create CI debug keystore
+        run: keytool -genkeypair -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
