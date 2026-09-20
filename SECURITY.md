@@ -8,7 +8,7 @@ Never post secrets, API keys, passwords, cookies, OAuth codes, session tokens, p
 
 ## Reporting
 
-For a security issue in Mirro, privately contact the repository owner through GitHub rather than opening a public issue. Include a minimal reproduction, affected commit/version, impact and sanitized evidence. Allow time for assessment before public disclosure.
+For a security issue in Mirro, use GitHub's private vulnerability reporting flow: [Report a vulnerability](https://github.com/obadadallo95/mirro-android-virtualization/security/advisories/new). Do not open a public issue first. Include a minimal reproduction, affected commit/version, impact and sanitized evidence. Allow time for assessment before public disclosure. If the link is unavailable, the repository owner must enable Private Vulnerability Reporting in the repository's GitHub Security settings; do not publish sensitive details in a public issue.
 
 ## Scope boundaries
 

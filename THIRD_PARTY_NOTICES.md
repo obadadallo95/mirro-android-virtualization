@@ -4,18 +4,20 @@ This file distinguishes software actually used by Mirro from projects cited as a
 
 ## Runtime and build dependencies
 
-The Gradle catalogs in `gradle/libs.versions.toml` reference the following upstream ecosystems. Their licenses and notices remain with the upstream projects and should be verified against the exact resolved version before redistribution of a binary:
+The current Gradle build resolves the following upstream ecosystems. Their licenses and notices remain with the upstream projects and should be verified against the exact resolved version before redistribution of a binary:
 
 | Dependency family | Use | Upstream license commonly published |
 |---|---|---|
-| Android SDK, AndroidX, Jetpack Compose, Room, Activity, Lifecycle, DataStore, CameraX | Android platform and UI/runtime libraries | Apache-2.0 |
+| Android SDK, AndroidX, Jetpack Compose, Room, Activity and Lifecycle | Android platform, UI and runtime libraries | Apache-2.0 |
 | Kotlin and Kotlin Coroutines | Language/runtime/concurrency | Apache-2.0 |
 | JUnit and AndroidX test libraries | Tests | Eclipse Public License 1.0 for JUnit; Apache-2.0 for AndroidX components |
 | Robolectric | JVM Android test environment | MIT |
-| Roborazzi | Screenshot testing | Apache-2.0; verify the resolved artifact notice |
-| OkHttp, Retrofit, Moshi, Coil | Networking, JSON and image support | Apache-2.0 |
-| Google Play services, Firebase, Google Identity/Credentials | Optional platform/service integrations referenced by the build | Google/Apache-2.0 notices vary by artifact; retain upstream notices |
 | Gradle wrapper | Build tooling | Apache-2.0 |
+
+The build does not currently depend on Retrofit, OkHttp, Moshi, Coil, CameraX,
+Firebase, Google Identity/Credentials, Maps secrets, or Accompanist. Those
+unused product-era catalog entries were removed rather than treated as runtime
+dependencies.
 
 Mirro does not vendor VirtualApp, VirtualXposed, BlackBox, DroidPlugin, Shizuku or any target APK. Those projects are research references only.
 

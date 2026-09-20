@@ -1,12 +1,14 @@
 # Mirro
 
+[![Android CI](https://github.com/obadadallo95/mirro-android-virtualization/actions/workflows/android-ci.yml/badge.svg?branch=main)](https://github.com/obadadallo95/mirro-android-virtualization/actions/workflows/android-ci.yml) [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
+
 Mirro is an **Android app virtualization research project**. It explores Android app cloning, multi-account isolation, in-process containers, dynamic DEX loading, Binder/system-service boundaries, native runtime compatibility, GMS identity, and Android-owned profile execution.
 
 > Active product development has concluded; the repository remains available as a research reference.
 
 ## Status
 
-- Research prototype and archived active-development project.
+- Research prototype; active product development has concluded.
 - Not production-ready.
 - Not a universal app cloner or a Parallel Space replacement.
 - No compatibility guarantee for arbitrary third-party apps.
@@ -58,6 +60,10 @@ Broad compatibility requires a deep authority boundary around:
 
 Mature VirtualApp/Parallel Space-style systems maintain this boundary across Android and OEM changes. Real Android profiles solve much of it because Android owns the package, UID, process, storage and services.
 
+## Historical target-specific experiment
+
+The manifest retains a narrow `com.openai.chatgpt://auth.openai.com` callback receiver from an earlier ChatGPT compatibility probe. It is not a generic Mirro authentication feature, does not implement authentication, and is not intended to make ChatGPT login work. The callback is documented as historical evidence only; the associated coordinator still requires a matching local diagnostic session.
+
 ## Architecture evolution
 
 ```text
@@ -106,6 +112,23 @@ Core reports:
 - [Lessons Learned](docs/09_LESSONS_LEARNED.md)
 - [Open Source License Review](docs/OPEN_SOURCE_LICENSE_REVIEW.md)
 
+## Build and reproduce
+
+Requirements:
+
+- JDK 17.
+- Android SDK with platform/API 36.1 and the SDK components required by the Gradle build.
+- Android Studio is optional; the Gradle wrapper is sufficient.
+
+```bash
+git clone https://github.com/obadadallo95/mirro-android-virtualization.git
+cd mirro-android-virtualization
+./gradlew testDebugUnitTest
+./gradlew assembleDebug
+```
+
+The app uses `compileSdk 36.1`, `minSdk 24`, and currently retains `targetSdk 27` only for the historical non-SDK/virtualization diagnostic experiment. `targetSdk 27` is not a recommended production target SDK. The project is not Play Store production-ready. Some compatibility experiments depend on physical-device and OEM behavior, while the Android profile proof is documented evidence and is not reproduced by the JVM unit-test suite.
+
 ## Compatibility findings
 
 The project uses evidence categories rather than a green “launch succeeded” claim. `STATIC_SUPPORTED`, `REGISTERED_DYNAMIC`, `DYNAMIC_LOADER_UNSEEN`, `NATIVE_LOAD_FAILED`, `SYSTEM_IDENTITY_BLOCKED`, and profile-mediated results describe what was actually observed.
@@ -135,6 +158,6 @@ Mirro does not bypass Play Integrity, forge signatures or UIDs, extract credenti
 
 ## License and contribution
 
-Mirro-owned source and documentation are released under [Apache License 2.0](LICENSE), subject to the notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Referenced projects are not Mirro dependencies and are not relicensed by this repository.
+Mirro-owned source and documentation are released under [Apache License 2.0](LICENSE). The license applies only to Mirro-owned material; third-party dependencies and referenced projects remain under their respective licenses as described in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 Documentation improvements, reproducibility reports and safe compatibility research are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).

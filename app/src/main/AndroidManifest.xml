@@ -50,8 +50,9 @@
             android:theme="@style/Theme.MyApplication"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Narrow custom-scheme receiver for the observed ChatGPT callback. The coordinator
-             still rejects callbacks unless a matching local auth session exists. -->
+        <!-- Historical target-specific probe for the observed ChatGPT callback. This is not a
+             generic Mirro authentication feature; the coordinator still rejects callbacks
+             unless a matching local diagnostic session exists. -->
         <activity
             android:name=".ui.container.MirroAuthCallbackActivity"
             android:exported="true"
