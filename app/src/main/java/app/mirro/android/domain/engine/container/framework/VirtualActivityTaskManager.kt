@@ -29,7 +29,7 @@ class VirtualActivityTaskManager(private val cloneId: String) {
             ActivityLaunchMode.CLEAR_TOP -> {
                 val existing = stack.indexOfFirst { it.component == record.component }
                 if (existing >= 0) {
-                    while (stack.size > existing + 1) stack.removeLast().finished = true
+                    while (stack.size > existing + 1) stack.removeAt(stack.lastIndex).finished = true
                     return stack[existing]
                 }
             }
@@ -54,7 +54,7 @@ class VirtualActivityTaskManager(private val cloneId: String) {
     fun back(): VirtualActivityRecord? {
         val task = tasks.values.lastOrNull() ?: return null
         if (task.isEmpty()) return null
-        task.removeLast().finished = true
+        task.removeAt(task.lastIndex).finished = true
         return task.lastOrNull()
     }
 
